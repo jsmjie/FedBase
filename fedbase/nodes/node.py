@@ -1,7 +1,7 @@
 from copy import deepcopy
 import torch
-from utils.model_utils import save_checkpoint, load_checkpoint
-from model.model import CNNMnist, MLP
+from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
+from fedbase.model.model import CNNMnist, MLP
 
 class node():
     def __init__(self):

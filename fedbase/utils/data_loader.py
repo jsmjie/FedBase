@@ -6,22 +6,22 @@ import torch
 from torch._utils import _accumulate
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from utils import femnist
+from fedbase.utils import femnist
 import os
 import pickle
 import datetime as d
 
 
 class data_process:
-    def __init__(self, dataset_name):
+    def __init__(self, dir, dataset_name):
         if dataset_name == 'mnist':
             apply_transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))])
             self.train_dataset = datasets.MNIST(
-                './data/'+dataset_name, train=True, download=True, transform=apply_transform)
+                dir, train=True, download=True, transform=apply_transform)
             self.test_dataset = datasets.MNIST(
-                './data/'+dataset_name, train=False, download=True, transform=apply_transform)
+                dir, train=False, download=True, transform=apply_transform)
         elif dataset_name == 'cifar10':
             transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
             self.train_dataset = datasets.CIFAR10(root='./data/'+dataset_name, train=True,download=True, transform=transform)
@@ -43,25 +43,25 @@ class data_process:
 
 
         # show image
-        batch_size = 4
-        trainloader = DataLoader(self.train_dataset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
-        classes = ('plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-        def imshow(img):
-            img = img / 2 + 0.5     # unnormalize
-            npimg = img.numpy()
-            plt.imshow(np.transpose(npimg, (1, 2, 0)))
-            plt.show()
+        # batch_size = 4
+        # trainloader = DataLoader(self.train_dataset, batch_size=batch_size,
+        #                                   shuffle=True, num_workers=2)
+        # classes = ('plane', 'car', 'bird', 'cat',
+        #    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+        # def imshow(img):
+        #     img = img / 2 + 0.5     # unnormalize
+        #     npimg = img.numpy()
+        #     plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        #     plt.show()
 
-        # get some random training images
-        dataiter = iter(trainloader)
-        images, labels = dataiter.next()
+        # # get some random training images
+        # dataiter = iter(trainloader)
+        # images, labels = dataiter.next()
 
-        # show images
-        imshow(torchvision.utils.make_grid(images))
-        # print labels
-        print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
+        # # show images
+        # imshow(torchvision.utils.make_grid(images))
+        # # print labels
+        # print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
         
 
     def split_dataset(self, num_nodes, alpha, method = 'dirichlet'):

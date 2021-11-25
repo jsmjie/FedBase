@@ -1,31 +1,33 @@
-from utils.data_loader import data_process
-from nodes.node import node
+from fedbase.utils.data_loader import data_process
+from fedbase.nodes.node import node
 # from server.server import server
-from model.model import CNNMnist, MLP, CNNCifar, CNNFashion_Mnist
-from model.resnet import resnet18
+from fedbase.model.model import CNNMnist, MLP, CNNCifar, CNNFashion_Mnist
+from fedbase.model.resnet import resnet18
 import torch.optim as optim
 import torch.nn as nn
 import torch
 from torch.utils.data import DataLoader, random_split, TensorDataset
 from copy import deepcopy
 import torch.multiprocessing as mp
-from utils.model_utils import save_checkpoint, load_checkpoint
+from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
 import os
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # hyperparameter
-dataset = 'Fashion_Mnist'
+# dataset = 'MNIST'
 num_nodes = 1
 global_rounds = 100
 local_epochs = 1
 local_steps = 1
 batch_size = 4
 
-if __name__ == '__main__':
+def run_global(dir, dataset):
     # split data
-    dt = data_process(dataset)
+    dt = data_process(dir, dataset)
     trainset,testset = dt.train_dataset, dt.test_dataset
     net = CNNFashion_Mnist()
     net.to(device)
