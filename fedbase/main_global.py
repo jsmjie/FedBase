@@ -12,7 +12,7 @@ import torch.multiprocessing as mp
 from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
 import os
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -32,9 +32,9 @@ def run_global(dir, dataset):
     net = CNNFashion_Mnist()
     net.to(device)
     trainloader = DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
+                                          shuffle=True)
     testloader = DataLoader(testset, batch_size=batch_size,
-                                         shuffle=False, num_workers=2)
+                                         shuffle=False)
 
     def test():
         correct = 0

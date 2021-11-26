@@ -29,6 +29,7 @@ class node():
         self.optim = optim
 
     def local_update(self, local_epochs, device):
+        # local_steps may be better!!
         # if self.id == 3:
         #     print('before_local_update',self.model.state_dict()[list(self.model.state_dict().keys())[-1]])
         # running_loss = 0
