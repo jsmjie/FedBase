@@ -1,5 +1,5 @@
 # FedBase
-An easy, silly, DIY Federated Learning framework with many baselines for individual researchers.
+An easy, modularized, DIY Federated Learning framework with many baselines for individual researchers.
 
 # Three steps to achieve FedAvg!
 1. Data partition
@@ -8,7 +8,12 @@ An easy, silly, DIY Federated Learning framework with many baselines for individ
 
 # Design philosophy
 1. Dataset
-    1. Dataset partition
+    1. Dataset
+        1. MNIST
+        2. CIFAR-10
+        3. Fashion-MNIST
+        4. ...
+    2. Dataset partition
         1. IID
         2. Non-IID
             1. Dirichlet distribution
@@ -16,7 +21,7 @@ An easy, silly, DIY Federated Learning framework with many baselines for individ
             3. ...
         3. Fake data
         4. ...
-    2. Batch_size
+    <!-- 3. Batch_size -->
 2. Node
     1. Local dataset
     2. Model
