@@ -40,5 +40,6 @@ An easy, silly, DIY Federated Learning framework with many baselines for individ
 # Baselines
 1. Global training
 2. FedAvg
+3. Ditto
 
 # To be continued...

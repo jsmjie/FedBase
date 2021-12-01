@@ -2,6 +2,7 @@ command.txt
 .pypirc
 publish.sh
 
+legacy/
 data/
 example/data/
 # Byte-compiled / optimized / DLL files
