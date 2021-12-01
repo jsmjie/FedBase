@@ -4,12 +4,12 @@ from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
 from fedbase.model.model import CNNMnist, MLP
 
 class node():
-    def __init__(self):
-        self.accuracy = []
-        pass
-
-    def id(self,id):
+    def __init__(self,id):
         self.id = id
+        self.accuracy = []
+
+    # def id(self,id):
+    #     self.id = id
 
     def assign_train(self, data):
         self.train = data
@@ -30,9 +30,7 @@ class node():
 
     def local_update(self, local_epochs, device):
         # local_steps may be better!!
-        # if self.id == 3:
-        #     print('before_local_update',self.model.state_dict()[list(self.model.state_dict().keys())[-1]])
-        # running_loss = 0
+        running_loss = 0
         for j in range(local_epochs):
             for k, (inputs, labels) in enumerate(self.train):
                 inputs = inputs.to(device)
@@ -46,13 +44,12 @@ class node():
                 self.loss.backward()
                 self.optim.step()
                 # print
-                # running_loss += loss.item()
-                # if (k+1) % 100 == 0:    # print every 100 mini-batches
-                #     print('[%d %d] node_%d loss: %.3f' %
-                #           (j, k+1, self.id, running_loss/20))
-                #     running_loss = 0
-        # if self.id == 3:
-        #     print('after_local_update',self.model.state_dict()[list(self.model.state_dict().keys())[-1]])
+                running_loss += self.loss.item()
+                if (k+1) % 100 == 0:    # print every 100 mini-batches
+                    print('[%d %d] node_%d loss: %.3f' %
+                          (j, k+1, self.id, running_loss/20))
+                    running_loss = 0
+
     def ditto_local_update(self, local_epochs, device, server, lam):
         for j in range(local_epochs):
             for k, (inputs, labels) in enumerate(self.train):

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from pandas.plotting import parallel_coordinates
 
-class server():
+class server_class():
     def __init__(self):
         self.accuracy = []
         self.clustering = []
@@ -17,7 +17,7 @@ class server():
         self.model = model
         self.model.to(device)
 
-    def aggregation(self, nodes, idlist, device, weight_type='data_size'):
+    def aggregate(self, nodes, idlist, device, weight_type='data_size'):
         # aggregated_weights = deepcopy(self.model.state_dict())
         aggregated_weights = self.model.state_dict()
         for j in aggregated_weights.keys():
@@ -51,7 +51,7 @@ class server():
         print('GLOBAL Accuracy is %.2f %%' % (100*global_accuracy))
         self.accuracy.append(global_accuracy)
                
-    def distribution(self, nodes, idlist):
+    def distribute(self, nodes, idlist):
         for i in idlist:
             nodes[i].model.load_state_dict(self.model.state_dict())
 
