@@ -103,5 +103,3 @@ class server_class():
         # Make the plot
         parallel_coordinates(data, 'id', colormap=plt.get_cmap("Set2"))
         plt.show()
-
-    # def ditto_distribution():
