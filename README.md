@@ -2,6 +2,9 @@
 An easy, silly, DIY Federated Learning framework with many baselines for individual researchers.
 
 # Three steps to achieve FedAvg!
+1. Data partition
+2. Nodes and server simulation
+3. Train and test
 
 # Design philosophy
 1. Dataset
