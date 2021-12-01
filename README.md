@@ -11,6 +11,8 @@ An easy, silly, DIY Federated Learning framework with many baselines for individ
             1. Dirichlet distribution
             2. N classes
             3. ...
+        3. Fake data
+        4. ...
     2. Batch_size
 2. Node
     1. Local dataset
@@ -31,6 +33,7 @@ An easy, silly, DIY Federated Learning framework with many baselines for individ
     1. Global
     2. Local
     3. FedAvg
+6. Visualization
 
 # How to develop your own FL with fedbase?
 
