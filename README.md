@@ -1,5 +1,8 @@
 # FedBase
 An easy, modularized, DIY Federated Learning framework with many baselines for individual researchers.
+```python
+pip install --upgrade fedbase
+```
 
 # Three steps to achieve FedAvg!
 1. Data partition
