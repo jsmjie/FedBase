@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 
 
-def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def local(dir, dataset, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     dt = data_process(dir, dataset)
     train_splited,test_splited = dt.split_dataset(num_nodes, 2, method='class')
 
@@ -42,5 +42,6 @@ def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glo
             nodes[j].local_update(local_epochs, device)
             nodes[j].local_test(device)
         # server aggregation and distribution
-        server.aggregate(nodes, list(range(num_nodes)), device)
-        server.distribute(nodes, list(range(num_nodes)))
+        # server.aggregate(nodes, list(range(num_nodes)), device)
+        # server.distribute(nodes, list(range(num_nodes)))
+        server.acc(nodes, list(range(num_nodes)))

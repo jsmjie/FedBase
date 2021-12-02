@@ -4,9 +4,10 @@ from fedbase.server.server import server_class
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from fedbase.model.model import CNNCifar, CNNMnist
 
 
-def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def cfl(dir, dataset, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     dt = data_process(dir, dataset)
     train_splited,test_splited = dt.split_dataset(num_nodes, 2, method='class')
 
@@ -28,8 +29,7 @@ def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glo
         nodes[i].assign_objective(local_loss[i])
         # optim
         # nodes[i].assign_optim(optim.Adam(nodes[i].model.parameters()))
-        nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
-        # nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
+        nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
 
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))
@@ -41,6 +41,12 @@ def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glo
         for j in range(num_nodes):
             nodes[j].local_update(local_epochs, device)
             nodes[j].local_test(device)
+        # server clustering
+        server.weighted_clustering(nodes, list(range(num_nodes)), K)
+        
         # server aggregation and distribution
-        server.aggregate(nodes, list(range(num_nodes)), device)
-        server.distribute(nodes, list(range(num_nodes)))
+        for i in range(K):
+            # print( [j for j in list(range(num_nodes)) if nodes[j].label==i])
+            server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i], device)
+            server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+        server.acc(nodes, list(range(num_nodes)))

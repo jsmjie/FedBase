@@ -11,11 +11,11 @@ def ditto(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glob
     train_splited,test_splited = dt.split_dataset(num_nodes, 2, method='class')
 
     server = server_class()
-    server.assign_model(model, device)
+    server.assign_model(model(), device)
 
     nodes = [node(i) for i in range(num_nodes)]
-    local_models = [model for i in range(num_nodes)]
-    local_loss = [objective for i in range(num_nodes)]
+    local_models = [model() for i in range(num_nodes)]
+    local_loss = [objective() for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data

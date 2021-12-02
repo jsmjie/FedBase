@@ -46,8 +46,10 @@ An easy, modularized, DIY Federated Learning framework with many baselines for i
 # How to develop your own FL with fedbase?
 
 # Baselines
-1. Global training
-2. FedAvg
-3. Ditto
+1. Centralized train
+2. Local train
+3. FedAvg
+4. Ditto
+5. Clustered FL
 
 # To be continued...
