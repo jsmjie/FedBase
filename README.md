@@ -1,17 +1,18 @@
 # FedBase
 An easy, modularized, DIY Federated Learning framework with many baselines for individual researchers.
 
+## Installation
 [fedbase @ pypi](https://pypi.org/project/fedbase/)
 ```python
 pip install --upgrade fedbase
 ```
 
-# Three steps to achieve FedAvg!
+## Three steps to achieve FedAvg!
 1. Data partition
 2. Nodes and server simulation
 3. Train and test
 
-# Design philosophy
+## Design philosophy
 1. Dataset
     1. Dataset
         1. MNIST
@@ -48,9 +49,9 @@ pip install --upgrade fedbase
     3. FedAvg
 6. Visualization
 
-# How to develop your own FL with fedbase?
+## How to develop your own FL with fedbase?
 
-# Baselines
+## Baselines
 1. Centralized train
 2. Local train
 3. FedAvg
@@ -58,4 +59,4 @@ pip install --upgrade fedbase
 5. Clustered FL
 6. ...
 
-# To be continued...
+## To be continued...
