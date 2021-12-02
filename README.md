@@ -1,5 +1,6 @@
 # FedBase
 An easy, modularized, DIY Federated Learning framework with many baselines for individual researchers.
+[fedbase @ pypi](https://pypi.org/project/fedbase/)
 ```python
 pip install --upgrade fedbase
 ```
