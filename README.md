@@ -36,7 +36,7 @@ An easy, modularized, DIY Federated Learning framework with many baselines for i
 4. Server & Node
     1. Topology
     2. Client sampling
-    3. Exchange file
+    3. Exchange message
 5. Baselines
     1. Global
     2. Local
@@ -51,5 +51,6 @@ An easy, modularized, DIY Federated Learning framework with many baselines for i
 3. FedAvg
 4. Ditto
 5. Clustered FL
+6. ...
 
 # To be continued...
