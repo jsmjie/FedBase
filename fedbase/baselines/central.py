@@ -24,3 +24,6 @@ def central(dir, dataset, batch_size, nodes, model, objective, optimizer, global
     for i in range(global_rounds):
         nodes0.local_update(1, device)
         nodes0.local_test(device)
+
+    # log
+    log(os.path.basename(__file__)[:-3], nodes, server)

@@ -10,6 +10,8 @@ from fedbase.utils import femnist
 import os
 import pickle
 import datetime as d
+import math
+import pandas as pd
 
 
 class data_process:
@@ -19,31 +21,31 @@ class data_process:
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))])
             self.train_dataset = datasets.MNIST(
-                dir, train=True, download=True, transform=apply_transform)
+                dir+dataset_name, train=True, download=True, transform=apply_transform)
             self.test_dataset = datasets.MNIST(
-                dir, train=False, download=True, transform=apply_transform)
+                dir+dataset_name, train=False, download=True, transform=apply_transform)
         elif dataset_name == 'cifar10':
             transform = transforms.Compose(
                 [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
             self.train_dataset = datasets.CIFAR10(
-                dir, train=True, download=True, transform=transform)
+                dir+dataset_name, train=True, download=True, transform=transform)
             self.test_dataset = datasets.CIFAR10(
-                dir, train=False, download=True, transform=transform)
+                dir+dataset_name, train=False, download=True, transform=transform)
         elif dataset_name == 'femnist':
             apply_transform = transforms.Compose(
                 [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-            train_dataset = femnist.FEMNIST(dir, train=True, download=False,
+            train_dataset = femnist.FEMNIST(dir+dataset_name, train=True, download=False,
                                             transform=apply_transform)
-            test_dataset = femnist.FEMNIST(dir, train=False, download=False,
+            test_dataset = femnist.FEMNIST(dir+dataset_name, train=False, download=False,
                                            transform=apply_transform)
         elif dataset_name == 'Fashion_Mnist':
             apply_transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.5,), (0.5,))])
             self.train_dataset = datasets.FashionMNIST(
-                dir, train=True, download=True, transform=apply_transform)
+                dir+dataset_name, train=True, download=True, transform=apply_transform)
             self.test_dataset = datasets.FashionMNIST(
-                dir, train=False, download=True, transform=apply_transform)
+                dir+dataset_name, train=False, download=True, transform=apply_transform)
 
         # show image
         # batch_size = 4
@@ -76,21 +78,18 @@ class data_process:
                 lens_list.append(len(dataset)-sum(lens_list))
                 return random_split(dataset, lens_list)
             else:
-                self.train_dataset.targets = torch.tensor(
-                    self.train_dataset.targets)
-                self.test_dataset.targets = torch.tensor(
-                    self.test_dataset.targets)
                 labels = torch.unique(self.train_dataset.targets)
                 train_label_size = self.train_dataset.targets.bincount()
                 test_label_size = self.test_dataset.targets.bincount()
+                # print(train_label_size, test_label_size)
                 l_train = train_label_size.reshape(
                     len(labels), 1).repeat(1, num_nodes)
                 l_test = test_label_size.reshape(
                     len(labels), 1).repeat(1, num_nodes)
                 # print(l_test)
                 if method == 'dirichlet':
-                    p = torch.tensor(np.random.dirichlet(
-                        np.repeat(alpha, num_nodes), len(labels)))
+                    p = torch.tensor(np.round(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels)), round(math.log(len(self.test_dataset)/len(labels),10))))
+                    # print(torch.sum(p,axis=1))
                 elif method == 'class':
                     p = np.zeros((len(labels), 1))
                     J = np.random.choice(len(labels), alpha, replace=False)
@@ -100,21 +99,12 @@ class data_process:
                         J = np.random.choice(len(labels), alpha, replace=False)
                         x[J] = 1
                         p = np.concatenate((p, x), axis=1)
-                    p = p / \
-                        np.repeat(
-                            (p.sum(axis=1)+10**-10).reshape(len(labels), 1), num_nodes, axis=1)
+                    p = p / np.repeat((p.sum(axis=1)+10**-10).reshape(len(labels), 1), num_nodes, axis=1)
                 # print(p.sum(axis=1),p)
-                # p = torch.tensor(np.random.dirichlet(np.repeat(alpha,len(labels)), num_nodes)).reshape(10,100)
-                # for i in range(len(p)):
-                #     if l_test*p[i]<10:
-                #         p[i]+=0.01
-                #         p[p==p.max()]-=0.01
-                train_size = l_train*p
-                train_size = train_size.int()
-                test_size = l_test*p
-                test_size = test_size.int()
-                # print(torch.sum(train_size,0),torch.sum(test_size,0))
-                # print(len((self.train_dataset.targets==0).nonzero(as_tuple=True)[0]))
+                train_size = torch.round(l_train*p).int()
+                # train_size = train_size.int()
+                test_size = torch.round(l_test*p).int()
+                # test_size = test_size.int()
                 train_splited = []
                 test_splited = []
                 train_label_index = []
@@ -124,12 +114,18 @@ class data_process:
                                              0][offset-length:offset] for offset, length in zip(_accumulate(train_size[j, :]), train_size[j, :])])
                     test_label_index.append([(self.test_dataset.targets == j).nonzero(as_tuple=True)[
                                             0][offset-length:offset] for offset, length in zip(_accumulate(test_size[j, :]), test_size[j, :])])
+                # how to deal with 0?
                 for i in range(num_nodes):
-                    train_splited.append(ConcatDataset(
-                        [Subset(self.train_dataset, train_label_index[j][i]) for j in labels]))
-                    test_splited.append(ConcatDataset(
-                        [Subset(self.test_dataset, test_label_index[j][i]) for j in labels]))
-                # print([len(train_splited[i]) for i in range(num_nodes)],[len(train_splited[i]) for i in range(num_nodes)])
+                    if len(ConcatDataset([Subset(self.test_dataset, test_label_index[j][i]) for j in labels]))>0:
+                        train_splited.append(ConcatDataset(
+                            [Subset(self.train_dataset, train_label_index[j][i]) for j in labels]))
+                        test_splited.append(ConcatDataset(
+                            [Subset(self.test_dataset, test_label_index[j][i]) for j in labels]))
+                if len(test_splited)<num_nodes:
+                    random_index = np.random.choice(range(len(test_splited)), num_nodes-len(test_splited), replace=False)
+                    train_splited = train_splited + [train_splited[i] for i in range(len(train_splited)) if i in random_index]           
+                    test_splited = test_splited + [test_splited[i] for i in range(len(test_splited)) if i in random_index]           
+             
                 # plot
                 for i in labels:
                     plt.barh(range(num_nodes), train_size[i, :], left=torch.sum(
@@ -141,8 +137,25 @@ class data_process:
                 return train_splited, test_splited
 
 
+def log(file_name, nodes, server):
+    local_file = ".\log\\" + file_name + "_" + d.datetime.now().strftime("%Y%m%d%H%M%S") + ".pkl"
+    log = {}
+    log['node'] = {}
+    for i in range(len(nodes)):
+        log['node'][str(i)] = nodes[i].accuracy
+    log['server'] = server.accuracy
+    log['clustering'] = server.clustering
+    # pd.to_pickle(log, local_file)
+    with  open(local_file, 'wb') as handle:
+        pickle.dump(log, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # read
+    if os.path.exists(local_file):
+        log = pickle.load(open(local_file, 'rb'))
+        print(log)
+
 # dt = data_process('mnist')
-# dt.split_dataset(50, 2, method='class')
+# # dt.split_dataset(50, 2, method='class')
 # dt.split_dataset(10, 0.1)
 
 
@@ -176,17 +189,4 @@ class data_process:
 #         return image, label
 
 
-def log(file_name, nodes, server):
-    local_file = './log/' + file_name + '_' + str(d.datetime.now()) + '.pkl'
-    log = {}
-    log['node'] = {}
-    for i in range(len(nodes)):
-        log['node'][str(i)] = nodes[i].accuracy
-    log['server'] = server.accuracy
-    log['clustering'] = server.clustering
-    pickle.dump(log, open(local_file, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
-    # read
-    if os.path.exists(local_file):
-        log = pickle.load(open(local_file, 'rb'))
-        print(log)

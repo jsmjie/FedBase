@@ -45,3 +45,6 @@ def local(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glob
         # server.aggregate(nodes, list(range(num_nodes)), device)
         # server.distribute(nodes, list(range(num_nodes)))
         server.acc(nodes, list(range(num_nodes)))
+
+    # log
+    log(os.path.basename(__file__)[:-3], nodes, server)

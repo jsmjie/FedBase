@@ -1,14 +1,15 @@
-from fedbase.utils.data_loader import data_process
+from fedbase.utils.data_loader import data_process, log
 from fedbase.nodes.node import node
 from fedbase.server.server import server_class
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
+import os
 
 
 def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     dt = data_process(dir, dataset)
-    train_splited,test_splited = dt.split_dataset(num_nodes, 2, method='class')
+    train_splited,test_splited = dt.split_dataset(num_nodes, 0.1)
 
     server = server_class()
     server.assign_model(model(), device)
@@ -28,8 +29,8 @@ def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glo
         nodes[i].assign_objective(local_loss[i])
         # optim
         # nodes[i].assign_optim(optim.Adam(nodes[i].model.parameters()))
-        nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
-        # nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
+        # nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
+        nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
 
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))
@@ -44,3 +45,6 @@ def fedavg(dir, dataset, batch_size, num_nodes, model, objective, optimizer, glo
         # server aggregation and distribution
         server.aggregate(nodes, list(range(num_nodes)), device)
         server.distribute(nodes, list(range(num_nodes)))
+
+    # log
+    log(os.path.basename(__file__)[:-3], nodes, server)

@@ -50,3 +50,6 @@ def cfl(dir, dataset, batch_size, K, num_nodes, model, objective, optimizer, glo
             server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i], device)
             server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
         server.acc(nodes, list(range(num_nodes)))
+    
+    # log
+    log(os.path.basename(__file__)[:-3], nodes, server)

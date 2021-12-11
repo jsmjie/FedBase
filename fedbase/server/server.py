@@ -35,7 +35,7 @@ class server_class():
             # print(aggregated_weights[j])
             global_accuracy += weight*nodes[i].accuracy[-1]
         print('Accuracy is %.2f %%' % (100*global_accuracy))
-        # self.accuracy.append(global_accuracy)
+        self.accuracy.append(global_accuracy)
         self.model.load_state_dict(aggregated_weights)
         # print('after_aggregation',self.model.state_dict()[list(self.model.state_dict().keys())[-1]])
     

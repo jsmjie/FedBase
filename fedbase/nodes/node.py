@@ -7,9 +7,8 @@ class node():
     def __init__(self,id):
         self.id = id
         self.accuracy = []
-
-    # def id(self,id):
-    #     self.id = id
+        self.step = 0
+        # self.train_steps = 0
 
     def assign_train(self, data):
         self.train = data
@@ -27,28 +26,64 @@ class node():
 
     def assign_optim(self, optim):
         self.optim = optim
-
-    def local_update(self, local_epochs, device):
-        # local_steps may be better!!
-        running_loss = 0
-        for j in range(local_epochs):
+    
+    def local_update(self, local_steps, device):
+        # print(len(self.train), self.step)
+        if len(self.train) - self.step > local_steps:
             for k, (inputs, labels) in enumerate(self.train):
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-                # zero the parameter gradients
-                self.model.zero_grad()
-                # forward + backward + optimize
-                outputs = self.model(inputs)
-                # optim
-                self.loss = self.objective(outputs, labels)
-                self.loss.backward()
-                self.optim.step()
-                # print
-                running_loss += self.loss.item()
-                if (k+1) % 100 == 0:    # print every 100 mini-batches
-                    print('[%d %d] node_%d loss: %.3f' %
-                          (j, k+1, self.id, running_loss/20))
-                    running_loss = 0
+                if k < self.step or k >= self.step + local_steps:
+                    continue
+                self.train_single_step(inputs, labels, device)
+            self.step = self.step + local_steps
+        else:
+            for k, (inputs, labels) in enumerate(self.train):
+                if k < self.step:
+                    continue
+                self.train_single_step(inputs, labels, device)
+            for j in range((local_steps-len(self.train)+self.step)//len(self.train)):
+                for k, (inputs, labels) in enumerate(self.train):
+                    self.train_single_step(inputs, labels, device)
+            for k, (inputs, labels) in enumerate(self.train):
+                if k >=(local_steps-len(self.train)+self.step)%len(self.train):
+                    continue
+                self.train_single_step(inputs, labels, device)
+            self.step = (local_steps-len(self.train)+self.step)%len(self.train)
+        # print(len(self.train), self.step)
+        # print(self.train_steps)
+
+    def train_single_step(self, inputs, labels, device):
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+        # zero the parameter gradients
+        self.model.zero_grad()
+        # forward + backward + optimize
+        outputs = self.model(inputs)
+        # optim
+        self.loss = self.objective(outputs, labels)
+        self.loss.backward()
+        self.optim.step()
+        # self.train_steps+=1
+    # def local_update(self, local_epochs, device):
+    #     # local_steps may be better!!
+    #     running_loss = 0
+    #     for j in range(local_epochs):
+    #         for k, (inputs, labels) in enumerate(self.train):
+    #             inputs = inputs.to(device)
+    #             labels = labels.to(device)
+    #             # zero the parameter gradients
+    #             self.model.zero_grad()
+    #             # forward + backward + optimize
+    #             outputs = self.model(inputs)
+    #             # optim
+    #             self.loss = self.objective(outputs, labels)
+    #             self.loss.backward()
+    #             self.optim.step()
+    #             # print
+    #             running_loss += self.loss.item()
+    #             if (k+1) % 100 == 0:    # print every 100 mini-batches
+    #                 print('[%d %d] node_%d loss: %.3f' %
+    #                       (j, k+1, self.id, running_loss/20))
+    #                 running_loss = 0
 
     def ditto_local_update(self, local_epochs, device, server, lam):
         for j in range(local_epochs):
