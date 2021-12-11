@@ -48,4 +48,4 @@ def local(dataset, batch_size, num_nodes, model, objective, optimizer, global_ro
         server.acc(nodes, list(range(num_nodes)))
 
     # log
-    log(os.path.basename(__file__)[:-3], nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(dataset) +'_' + split['split_method'] +'_' + str(split['split_para']) , nodes, server)

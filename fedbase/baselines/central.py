@@ -28,4 +28,4 @@ def central(dataset, batch_size, model, objective, optimizer, global_rounds, dev
         nodes0.local_test(device)
 
     # log
-    log(os.path.basename(__file__)[:-3], [nodes0], server={})
+    log(os.path.basename(__file__)[:-3]+ '_' + str(dataset), [nodes0], server={})
