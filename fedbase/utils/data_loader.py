@@ -12,10 +12,11 @@ import pickle
 import datetime as d
 import math
 import pandas as pd
-
+from pathlib import Path
 
 class data_process:
-    def __init__(self, dir, dataset_name):
+    def __init__(self, dataset_name):
+        dir ='./data/'
         if dataset_name == 'mnist':
             apply_transform = transforms.Compose([
                 transforms.ToTensor(),
@@ -38,7 +39,7 @@ class data_process:
                                             transform=apply_transform)
             test_dataset = femnist.FEMNIST(dir+dataset_name, train=False, download=False,
                                            transform=apply_transform)
-        elif dataset_name == 'Fashion_Mnist':
+        elif dataset_name == 'fashion_mnist':
             apply_transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.5,), (0.5,))])
@@ -138,14 +139,18 @@ class data_process:
 
 
 def log(file_name, nodes, server):
-    local_file = ".\log\\" + file_name + "_" + d.datetime.now().strftime("%Y%m%d%H%M%S") + ".pkl"
+    local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%Y%m%d_%H%M%S") + ".pkl"
     log = {}
     log['node'] = {}
     for i in range(len(nodes)):
         log['node'][str(i)] = nodes[i].accuracy
-    log['server'] = server.accuracy
-    log['clustering'] = server.clustering
+    try:
+        log['server'] = server.accuracy
+        log['clustering'] = server.clustering
+    except:
+        print('No server')
     # pd.to_pickle(log, local_file)
+    Path(local_file).parent.mkdir(parents=True, exist_ok=True)
     with  open(local_file, 'wb') as handle:
         pickle.dump(log, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
