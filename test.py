@@ -21,6 +21,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 global_rounds = 1
 num_nodes = 20
 local_steps = 10
+multi_processes = 4
+seeds = 2
 
 def unpack_args(func):
     from functools import wraps
@@ -52,6 +54,6 @@ def main(seeds, j, k):
 if __name__ == '__main__':
     start = time.perf_counter()
     mp.set_start_method('spawn')
-    with mp.Pool(4) as p:
-        p.map(main, [(i, j, k) for i in range(2) for j,k in zip([2, 0.1, 0.5, 1], ['class', 'dirichlet', 'dirichlet', 'dirichlet'])])
+    with mp.Pool(multi_processes) as p:
+        p.map(main, [(i, j, k) for i in range(seeds) for j,k in zip([2, 0.1, 0.5, 1], ['class', 'dirichlet', 'dirichlet', 'dirichlet'])])
     print(time.perf_counter()-start, "seconds")
