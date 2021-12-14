@@ -53,4 +53,4 @@ def cfl(dataset, batch_size, K, num_nodes, model, objective, optimizer, global_r
         server.acc(nodes, list(range(num_nodes)))
     
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + str(dataset) +'_' + split['split_method'] +'_' + str(split['split_para']) , nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(dataset) +'_' + split['split_method'] +'_' + str(split['split_para']), nodes, server)

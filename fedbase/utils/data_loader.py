@@ -136,7 +136,7 @@ class data_process:
                 # plt.title("Data distribution of dataset")
                 plt.legend()
                 mpl.rcParams['figure.dpi'] = 300
-                plt.show()
+                # plt.show()
                 return train_splited, test_splited
 
 
