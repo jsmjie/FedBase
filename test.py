@@ -5,8 +5,8 @@ from fedbase.nodes.node import node
 import torch.optim as optim
 import torch.nn as nn
 import numpy as np
-from multiprocessing import Process, Pool
-from functools import partial
+from multiprocessing import Pool
+import time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # np.random.seed(0)
@@ -38,11 +38,8 @@ def main(seeds):
         #     cfl.cfl('cifar10', 64, K, num_nodes, CNNCifar, nn.CrossEntropyLoss, optim.SGD, global_rounds, local_steps, **{'split_para':j, 'split_method':k})
 
 # multiprocessing
-import time
 if __name__ == '__main__':
-    start = time.perf_counter()
-    # with Pool(2) as p:
-    #     p.map(main, [0,1])
-    main(0)
-    main(1)
-    print(time.perf_counter()-start, "seconds")
+    # start = time.perf_counter()
+    with Pool(2) as p:
+        p.map(main, [0,1])
+    # print(time.perf_counter()-start, "seconds")
