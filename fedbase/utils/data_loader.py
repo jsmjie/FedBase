@@ -158,8 +158,9 @@ def log(file_name, nodes, server):
 
     # read
     if os.path.exists(local_file):
-        log = pickle.load(open(local_file, 'rb'))
-        print(log)
+        with open(local_file, 'rb') as f:
+            log = pickle.load(f)
+            print(log)
 
 # dt = data_process('mnist')
 # # dt.split_dataset(50, 2, method='class')
