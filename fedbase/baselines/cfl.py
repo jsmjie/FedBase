@@ -8,7 +8,7 @@ from fedbase.model.model import CNNCifar, CNNMnist
 import os
 
 
-def cfl(dataset, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_epochs, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'), **split):
+def run(dataset, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'), **split):
     dt = data_process(dataset)
     train_splited,test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
 
@@ -40,16 +40,16 @@ def cfl(dataset, batch_size, K, num_nodes, model, objective, optimizer, global_r
         print('-------------------Global round %d start-------------------' % (i))
         # single-processing!
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_epochs, device)
-            nodes[j].local_test(device)
+            nodes[j].local_update_steps(local_steps, device)
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)
-        
-        # server aggregation and distribution
+        # server aggregation and distribution by cluster
         for i in range(K):
-            # print( [j for j in list(range(num_nodes)) if nodes[j].label==i])
             server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i], device)
             server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+        # test accuracy
+        for j in range(num_nodes):
+            nodes[j].local_test(device)
         server.acc(nodes, list(range(num_nodes)))
     
     # log

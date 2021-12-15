@@ -18,12 +18,9 @@ class server_class():
         self.model.to(device)
 
     def aggregate(self, nodes, idlist, device, weight_type='data_size'):
-        # aggregated_weights = deepcopy(self.model.state_dict())
         aggregated_weights = self.model.state_dict()
         for j in aggregated_weights.keys():
             aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(device)
-        # print(aggregated_weights[j])
-        global_accuracy = 0
         sum_size = sum([nodes[i].data_size for i in idlist])
         for i in idlist:
             if weight_type == 'equal':
@@ -32,12 +29,7 @@ class server_class():
                 weight = nodes[i].data_size/sum_size
             for j in nodes[i].model.state_dict().keys():
                 aggregated_weights[j] += nodes[i].model.state_dict()[j]*weight
-            # print(aggregated_weights[j])
-            global_accuracy += weight*nodes[i].accuracy[-1]
-        print('Accuracy is %.2f %%' % (100*global_accuracy))
-        self.accuracy.append(global_accuracy)
         self.model.load_state_dict(aggregated_weights)
-        # print('after_aggregation',self.model.state_dict()[list(self.model.state_dict().keys())[-1]])
     
     def acc(self, nodes, idlist, weight_type='data_size'):
         global_accuracy = 0

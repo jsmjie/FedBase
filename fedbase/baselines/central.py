@@ -6,7 +6,7 @@ import torch.optim as optim
 import os
 
 
-def central(dataset, batch_size, model, objective, optimizer, global_rounds, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset, batch_size, model, objective, optimizer, global_rounds, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     dt = data_process(dataset)
     trainset,testset = dt.train_dataset, dt.test_dataset
     trainloader = DataLoader(trainset, batch_size=batch_size,
