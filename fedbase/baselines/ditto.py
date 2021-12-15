@@ -27,8 +27,8 @@ def ditto(dataset, batch_size, num_nodes, model, objective, optimizer, global_ro
         # objective
         nodes[i].assign_objective(local_loss[i])
         # optim
-        # nodes[i].assign_optim(optim.Adam(nodes[i].model.parameters()))
-        nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
+        nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
+        # nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
 
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))

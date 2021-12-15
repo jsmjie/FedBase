@@ -141,7 +141,7 @@ class data_process:
 
 
 def log(file_name, nodes, server):
-    local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%Y%m%d_%H%M%S") + ".pkl"
+    local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%m%d_%H%M%S")+'_'+str(np.random.choice(10**3)) + ".pkl"
     log = {}
     log['node'] = {}
     for i in range(len(nodes)):

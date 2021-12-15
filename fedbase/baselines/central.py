@@ -19,8 +19,8 @@ def central(dataset, batch_size, model, objective, optimizer, global_rounds, dev
     nodes0.assign_test(testloader)
     nodes0.assign_model(model(), device)
     nodes0.assign_objective(objective())
-    optimizer = optim.SGD(nodes0.model.parameters(), lr=0.01, momentum=0.9)
-    nodes0.assign_optim(optimizer)
+    # optimizer = optim.SGD(nodes0.model.parameters(), lr=0.01, momentum=0.9)
+    nodes0.assign_optim(optimizer(nodes0.model.parameters()))
 
     print('-------------------start-------------------')
     for i in range(global_rounds):
