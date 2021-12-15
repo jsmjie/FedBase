@@ -79,8 +79,9 @@ class data_process:
                 lens_list.append(len(dataset)-sum(lens_list))
                 return random_split(dataset, lens_list)
             else:
-                self.train_dataset.targets = torch.tensor(self.train_dataset.targets)
-                self.test_dataset.targets = torch.tensor(self.test_dataset.targets)
+                if torch.is_tensor(self.train_dataset.targets)==False:
+                    self.train_dataset.targets = torch.tensor(self.train_dataset.targets)
+                    self.test_dataset.targets = torch.tensor(self.test_dataset.targets)
                 labels = torch.unique(self.train_dataset.targets)
                 train_label_size = self.train_dataset.targets.bincount()
                 test_label_size = self.test_dataset.targets.bincount()
