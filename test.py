@@ -12,7 +12,7 @@ import time
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 global_rounds = 1
-num_nodes = 20
+num_nodes = 200
 local_steps = 10
 multi_processes = 4
 seeds = 2
@@ -20,6 +20,7 @@ seeds = 2
 @unpack_args
 def main(seeds, j, k):
     np.random.seed(seeds)
+    # redundant
     central.run('fashion_mnist', 64, CNNFashion_Mnist, nn.CrossEntropyLoss, optim.Adam, global_rounds)
     central.run('cifar10', 64, CNNCifar, nn.CrossEntropyLoss, optim.Adam, global_rounds)
     fedavg.run('fashion_mnist', 64, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optim.Adam, global_rounds, local_steps, **{'split_para':j, 'split_method':k})
@@ -39,6 +40,8 @@ def main1(seeds, j, k, K):
 
 # multiprocessing
 if __name__ == '__main__':
+    main1((1,0.5,'dirichlet',3))
+    print(a)
     start = time.perf_counter()
     mp.set_start_method('spawn')
     with mp.Pool(multi_processes) as p:

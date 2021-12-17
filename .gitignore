@@ -6,6 +6,7 @@ legacy/
 data/
 example/data/
 log/
+vis/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

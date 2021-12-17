@@ -19,8 +19,9 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
     nodes0.assign_test(testloader)
     nodes0.assign_model(model(), device)
     nodes0.assign_objective(objective())
-    # optimizer = optim.SGD(nodes0.model.parameters(), lr=0.01, momentum=0.9)
-    nodes0.assign_optim(optimizer(nodes0.model.parameters()))
+    # optimizer = optim.SGD(nodes0.model.parameters(), lr=0.001, momentum=0.9)
+    # nodes0.assign_optim(optimizer(nodes0.model.parameters()))
+    nodes0.assign_optim(optim.SGD(nodes0.model.parameters(), lr=0.001, momentum=0.9))
 
     print('-------------------start-------------------')
     for i in range(global_rounds):
