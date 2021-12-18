@@ -17,7 +17,7 @@ for dataset in ['fashion_mnist', 'cifar10']:
     for noniid in ['class_2','dirichlet_0.1','dirichlet_0.5','dirichlet_1']:
         # central
         method = 'central'
-        file_list = glob.glob('./log/'+ 'central' + '_' +'*'+dataset+'*')
+        file_list = glob.glob('./log/log_adam/'+ 'central' + '_' +'*'+dataset+'*')
         if len(file_list)>0:
             acc= []
             for i in file_list:
@@ -39,7 +39,7 @@ for dataset in ['fashion_mnist', 'cifar10']:
             sns.lineplot(x=acc_df_n["round"], y=acc_df_n["acc"], label = method)
         # others
         for method in ['fedavg', 'ditto', 'local', 'fedavg_finetune',  'cfl_3', 'cfl_5', 'cfl_10']:
-            file_list = glob.glob('./log/'+ method + '_' +'*'+dataset+'*'+ noniid +'*')
+            file_list = glob.glob('./log/log_adam/'+ method + '_' +'*'+dataset+'*'+ noniid +'*')
             if len(file_list)>0:
                 acc= []
                 for i in file_list:

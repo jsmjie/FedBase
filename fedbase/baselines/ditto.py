@@ -27,8 +27,7 @@ def run(dataset, batch_size, num_nodes, model, objective, optimizer, global_roun
         # objective
         nodes[i].assign_objective(local_loss[i])
         # optim
-        # nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
-        nodes[i].assign_optim(optim.SGD(nodes[i].model.parameters(), lr=0.001, momentum=0.9))
+        nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
 
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))
