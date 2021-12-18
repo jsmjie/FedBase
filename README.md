@@ -52,11 +52,11 @@ pip install --upgrade fedbase
 ## How to develop your own FL with fedbase?
 
 ## Baselines
-1. Centralized train
-2. Local train
+1. Centralized training
+2. Local training
 3. FedAvg
 4. Ditto
 5. Clustered FL
-6. ...
+6. FedAvg + Finetune
 
 ## To be continued...
