@@ -6,6 +6,7 @@ import torch
 from torch._utils import _accumulate
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from fedbase.utils.utils import get_targets
 from fedbase.utils import femnist
 import os
 import pickle
@@ -13,10 +14,12 @@ import datetime as d
 import math
 import pandas as pd
 from pathlib import Path
+from collections import Counter
 
 class data_process:
     def __init__(self, dataset_name):
         dir ='./data/'
+        self.dataset_name = dataset_name
         if dataset_name == 'mnist':
             apply_transform = transforms.Compose([
                 transforms.ToTensor(),
@@ -69,22 +72,24 @@ class data_process:
         # # print labels
         # print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
 
-    def split_dataset(self, num_nodes, alpha, method='dirichlet'):
+    def split_dataset(self, num_nodes, alpha, method='dirichlet', train_dataset = None, test_dataset = None):
+        train_dataset = self.train_dataset if train_dataset is None else train_dataset
+        test_dataset = self.test_dataset if test_dataset is None else test_dataset
+        train_targets, test_targets = get_targets(train_dataset), get_targets(test_dataset)
         if num_nodes == 1:
-            return self.train_dataset, self.test_dataset
+            return train_dataset, test_dataset
         else:
             if method == 'iid':
-                lens_list = [int(len(dataset)/num_nodes)
-                             for i in range(num_nodes-1)]
-                lens_list.append(len(dataset)-sum(lens_list))
-                return random_split(dataset, lens_list)
+                train_lens_list = [int(len(train_dataset)/num_nodes) for i in range(num_nodes)]
+                test_lens_list = [int(len(test_dataset)/num_nodes) for i in range(num_nodes)]
+                train_splited, test_splited = random_split(Subset(train_dataset, torch.arange(sum(train_lens_list))), train_lens_list), random_split(Subset(test_dataset, torch.arange(sum(test_lens_list))), test_lens_list)
+                # plot
+                labels = torch.unique(train_targets)
+                self.plot_split(labels, train_splited)
+                return train_splited, test_splited
             else:
-                if torch.is_tensor(self.train_dataset.targets)==False:
-                    self.train_dataset.targets = torch.tensor(self.train_dataset.targets)
-                    self.test_dataset.targets = torch.tensor(self.test_dataset.targets)
-                labels = torch.unique(self.train_dataset.targets)
-                train_label_size = self.train_dataset.targets.bincount()
-                test_label_size = self.test_dataset.targets.bincount()
+                labels, train_label_size = torch.unique(train_targets, return_counts=True)
+                _, test_label_size = torch.unique(test_targets, return_counts=True)
                 # print(train_label_size, test_label_size)
                 l_train = train_label_size.reshape(
                     len(labels), 1).repeat(1, num_nodes)
@@ -92,7 +97,7 @@ class data_process:
                     len(labels), 1).repeat(1, num_nodes)
                 # print(l_test)
                 if method == 'dirichlet':
-                    p = torch.tensor(np.round(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels)), round(math.log(len(self.test_dataset)/len(labels),10))))
+                    p = torch.tensor(np.round(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels)), round(math.log(len(test_dataset)/len(labels),10))))
                     # print(torch.sum(p,axis=1))
                 elif method == 'class':
                     p = np.zeros((len(labels), 1))
@@ -106,40 +111,67 @@ class data_process:
                     p = p / np.repeat((p.sum(axis=1)+10**-10).reshape(len(labels), 1), num_nodes, axis=1)
                 # print(p.sum(axis=1),p)
                 train_size = torch.round(l_train*p).int()
-                # train_size = train_size.int()
                 test_size = torch.round(l_test*p).int()
-                # test_size = test_size.int()
                 train_splited = []
                 test_splited = []
                 train_label_index = []
                 test_label_index = []
-                for j in labels:
-                    train_label_index.append([(self.train_dataset.targets == j).nonzero(as_tuple=True)[
+                for j in range(len(labels)):
+                    train_label_index.append([(train_targets== labels[j]).nonzero(as_tuple=True)[
                                              0][offset-length:offset] for offset, length in zip(_accumulate(train_size[j, :]), train_size[j, :])])
-                    test_label_index.append([(self.test_dataset.targets == j).nonzero(as_tuple=True)[
+                    test_label_index.append([(test_targets== labels[j]).nonzero(as_tuple=True)[
                                             0][offset-length:offset] for offset, length in zip(_accumulate(test_size[j, :]), test_size[j, :])])
                 # how to deal with 0?
                 for i in range(num_nodes):
-                    if len(ConcatDataset([Subset(self.test_dataset, test_label_index[j][i]) for j in labels]))>0:
+                    if len(ConcatDataset([Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))>0:
                         train_splited.append(ConcatDataset(
-                            [Subset(self.train_dataset, train_label_index[j][i]) for j in labels]))
+                            [Subset(train_dataset, train_label_index[j][i]) for j in range(len(labels))]))
                         test_splited.append(ConcatDataset(
-                            [Subset(self.test_dataset, test_label_index[j][i]) for j in labels]))
+                            [Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))
                 if len(test_splited)<num_nodes:
                     random_index = np.random.choice(range(len(test_splited)), num_nodes-len(test_splited), replace=False)
                     train_splited = train_splited + [train_splited[i] for i in range(len(train_splited)) if i in random_index]           
-                    test_splited = test_splited + [test_splited[i] for i in range(len(test_splited)) if i in random_index]           
-             
-                # plot
-                for i in labels:
-                    plt.barh(range(num_nodes), train_size[i, :], left=torch.sum(
-                        train_size[:i], 0), label=str(int(i)))
-                # plt.title("Data distribution of dataset")
-                plt.legend()
-                mpl.rcParams['figure.dpi'] = 300
-                plt.show()
-                return train_splited, test_splited
+                    test_splited = test_splited + [test_splited[i] for i in range(len(test_splited)) if i in random_index]  
 
+                self.plot_split(labels, train_splited)    
+                return train_splited, test_splited, self.dataset_name +'_'+ str(num_nodes)+'_'+ str(alpha)+'_'+ str(method)
+        
+    def split_dataset_groupwise(self, num0, alpha0, method0, num1, alpha1, method1, train_dataset = None, test_dataset = None):
+        train_dataset = self.train_dataset if train_dataset is None else train_dataset
+        test_dataset = self.test_dataset if test_dataset is None else test_dataset
+        train_targets = get_targets(train_dataset)
+        train_splited = []
+        test_splited = []
+        train_splited_0, test_splited_0, _ = self.split_dataset(num0, alpha0, method0)
+        for i in range(num0):
+            train_tmp, test_tmp, _ = self.split_dataset(num1, alpha1, method1, train_dataset=train_splited_0[i], test_dataset=test_splited_0[i])
+            train_splited += train_tmp
+            test_splited += test_tmp
+        #plot
+        labels = torch.unique(train_targets)
+        self.plot_split(labels, train_splited)
+        return train_splited, test_splited, self.dataset_name +'_'+ str(num0)+'_'+ str(alpha0)+'_'+ str(method0)+'_'+ str(num1)+'_'+ str(alpha1)+'_'+ str(method1)
+
+    def plot_split(self, labels, train_splited):
+        return None
+        train_size = []
+        for x in train_splited:
+            tmp = []
+            train_classes = [int(label) for _, label in x]
+            for i in range(len(labels)):
+                tmp.append(train_classes.count(labels[i]))
+            # train_targets = get_targets(x)
+            # labels, train_label_size = torch.unique(train_targets, return_counts=True)
+            train_size.append(tmp)
+        train_size = torch.tensor(train_size).T
+        # plot
+        for i in range(len(labels)):
+            plt.barh(range(len(train_splited)), train_size[i, :], left=torch.sum(
+                train_size[:i], 0), label=str(int(labels[i])))
+        # plt.title("Data distribution of dataset")
+        plt.legend()
+        mpl.rcParams['figure.dpi'] = 300
+        plt.show()
 
 def log(file_name, nodes, server):
     local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%m%d_%H%M%S")+'_'+str(np.random.choice(10**3)) + ".pkl"
