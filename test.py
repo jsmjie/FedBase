@@ -53,10 +53,11 @@ if __name__ == '__main__':
     start = time.perf_counter()
     mp.set_start_method('spawn')
     with mp.Pool(multi_processes) as p:
+        # main0((27, data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), CNNCifar))
         # client_wise
         # p.map(main0, [(i, data_process(dataset).split_dataset(num_nodes, j, k), model) for i in range(27, 27+seeds) for dataset, model in zip(['cifar10', 'fashion_mnist'],[CNNCifar, CNNFashion_Mnist]) for j, k in zip([2, 0.1, 0.5, 1], ['class', 'dirichlet', 'dirichlet', 'dirichlet'])])
         # p.map(main1, [(i, j, k, K) for i in range(17, 17+seeds) for j,k in zip([2, 0.1, 0.5, 1], ['class', 'dirichlet', 'dirichlet', 'dirichlet']) for K in [3,5,10]])
         # group_wise
         p.map(main0, [(i, data_process(dataset).split_dataset_groupwise(n0,j0,k0,n1,j1,k1), model) for i in range(27, 27+seeds) for dataset, model in zip(['cifar10', 'fashion_mnist'],[CNNCifar, CNNFashion_Mnist]) \
-            for n0,n1 in zip([5],[40]) for j0, k0 in zip([5, 0.1], ['class', 'dirichlet']) for j1, k1 in zip([10], ['dirichlet'])])
+            for n0,n1 in zip([5, 10],[40, 20]) for j0, k0, j1, k1 in zip([6, 0.1], ['class', 'dirichlet'], [5, 10], ['class', 'dirichlet'])])
     print(time.perf_counter()-start, "seconds")

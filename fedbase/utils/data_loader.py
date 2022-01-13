@@ -129,7 +129,8 @@ class data_process:
                         test_splited.append(ConcatDataset(
                             [Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))
                 if len(test_splited)<num_nodes:
-                    random_index = np.random.choice(range(len(test_splited)), num_nodes-len(test_splited), replace=False)
+                    # print(self.dataset_name, len(train_splited),len(test_splited))
+                    random_index = np.random.choice(range(len(test_splited)), num_nodes-len(test_splited), replace=True)
                     train_splited = train_splited + [train_splited[i] for i in range(len(train_splited)) if i in random_index]           
                     test_splited = test_splited + [test_splited[i] for i in range(len(test_splited)) if i in random_index]  
 

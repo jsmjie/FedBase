@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fedbase",
-    version="0.3.2",
+    version="0.3.3",
     author="Jie MA",
     author_email="ustcmj@gmail.com, jie.ma-5@student.uts.edu.au",
     description="An easy, silly, DIY Federated Learning framework with many baselines for individual researchers.",
