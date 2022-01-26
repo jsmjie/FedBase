@@ -13,7 +13,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
-
     server = server_class()
     server.assign_model(model(), device)
 
@@ -54,4 +53,4 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.acc(nodes, list(range(num_nodes)))
     
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + split_para, nodes, server)

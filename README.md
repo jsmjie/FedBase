@@ -23,7 +23,7 @@ pip install --upgrade fedbase
         1. IID
         2. Non-IID
             1. Dirichlet distribution
-            2. N classes
+            2. N-class
             3. ...
         3. Fake data
         4. ...
@@ -55,8 +55,9 @@ pip install --upgrade fedbase
 1. Centralized training
 2. Local training
 3. FedAvg
-4. Ditto
-5. Clustered FL
-6. FedAvg + Finetune
+4. FedAvg + Finetune
+5. Ditto
+6. WCFL
+
 
 ## To be continued...

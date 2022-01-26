@@ -11,7 +11,7 @@ from pandas.plotting import parallel_coordinates
 class server_class():
     def __init__(self):
         self.accuracy = []
-        self.clustering = []
+        self.clustering = {'label':[], 'raw':[], 'center':[]}
 
     def assign_model(self, model, device):
         self.model = model
@@ -82,7 +82,10 @@ class server_class():
         print(labels)
         for i in idlist:
             nodes[i].label = labels[i]
-        self.clustering.append(labels)
+        self.clustering['label'].append(labels)
+        # self.clustering['raw'].append(X)
+        # self.clustering['center'].append(kmeans.cluster_centers_)
+
     
     def clustering_plot(self):
         # print(self.clustering)
