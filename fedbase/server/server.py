@@ -9,18 +9,19 @@ import matplotlib as mpl
 from pandas.plotting import parallel_coordinates
 
 class server_class():
-    def __init__(self):
-        self.accuracy = []
+    def __init__(self, device):
+        self.device = device
+        self.test_metrics = []
         self.clustering = {'label':[], 'raw':[], 'center':[]}
 
-    def assign_model(self, model, device):
+    def assign_model(self, model):
         self.model = model
-        self.model.to(device)
+        self.model.to(self.device)
 
-    def aggregate(self, nodes, idlist, device, weight_type='data_size'):
+    def aggregate(self, nodes, idlist, weight_type='data_size'):
         aggregated_weights = self.model.state_dict()
         for j in aggregated_weights.keys():
-            aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(device)
+            aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(self.device)
         sum_size = sum([nodes[i].data_size for i in idlist])
         for i in idlist:
             if weight_type == 'equal':
@@ -32,29 +33,30 @@ class server_class():
         self.model.load_state_dict(aggregated_weights)
     
     def acc(self, nodes, idlist, weight_type='data_size'):
-        global_accuracy = 0
+        global_test_metrics = [0]*3
         sum_size = sum([nodes[i].data_size for i in idlist])
         for i in idlist:
             if weight_type == 'equal':
                 weight = 1/len(idlist)
             elif weight_type == 'data_size':
                 weight = nodes[i].data_size/sum_size
-            global_accuracy += weight*nodes[i].accuracy[-1]
-        print('GLOBAL Accuracy is %.2f %%' % (100*global_accuracy))
-        self.accuracy.append(global_accuracy)
+            for j in range(len(global_test_metrics)):
+                global_test_metrics[j] += weight*nodes[i].test_metrics[-1][j]
+        print('GLOBAL Accuracy, Macro F1, Micro F1 is %.2f %%, %.2f, %.2f' % (100*global_test_metrics[0],global_test_metrics[1],global_test_metrics[2]))
+        self.test_metrics.append(global_test_metrics)
                
     def distribute(self, nodes, idlist):
         for i in idlist:
             nodes[i].model.load_state_dict(self.model.state_dict())
 
-    def test(self, test_loader, device):
+    def test(self, test_loader):
         correct = 0
         total = 0
         with torch.no_grad():
             for data in test_loader:
                 inputs, labels = data
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)

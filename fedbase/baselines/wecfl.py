@@ -4,14 +4,16 @@ from fedbase.server.server import server_class
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from fedbase.model.model import CNNCifar, CNNMnist
 import os
+import sys
+import inspect
+from functools import partial
 
-
-def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, finetune_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
-
     server = server_class(device)
     server.assign_model(model())
 
@@ -37,22 +39,19 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     # train!
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
-        # single-processing!
+        # local update
         for j in range(num_nodes):
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
-        # server aggregation and distribution
-        server.aggregate(nodes, list(range(num_nodes)))
-        server.distribute(nodes, list(range(num_nodes)))
+        # server clustering
+        server.weighted_clustering(nodes, list(range(num_nodes)), K)
+        # server aggregation and distribution by cluster
+        for i in range(K):
+            server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+            server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()
         server.acc(nodes, list(range(num_nodes)))
-
-    # fine tune
-    for j in range(num_nodes):
-        nodes[j].local_update_steps(finetune_steps)
-        nodes[j].local_test()
-    server.acc(nodes, list(range(num_nodes)))
-
+    
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + split_para, nodes, server)

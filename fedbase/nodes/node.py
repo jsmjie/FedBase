@@ -1,13 +1,18 @@
 from copy import deepcopy
 import torch
+from torch import linalg as LA
 from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
 from fedbase.model.model import CNNMnist, MLP
+from sklearn.metrics import accuracy_score, f1_score
+from fedbase.utils.utils import unpack_args
+from functools import partial
 
 class node():
-    def __init__(self,id):
+    def __init__(self, id, device):
         self.id = id
-        self.accuracy = []
+        self.test_metrics = []
         self.step = 0
+        self.device = device
         # self.train_steps = 0
 
     def assign_train(self, data):
@@ -17,9 +22,9 @@ class node():
     def assign_test(self,data):
         self.test = data
 
-    def assign_model(self, model, device):
+    def assign_model(self, model):
         self.model = model
-        self.model.to(device)
+        self.model.to(self.device)
 
     def assign_objective(self, objective):
         self.objective = objective
@@ -27,33 +32,31 @@ class node():
     def assign_optim(self, optim):
         self.optim = optim
     
-    def local_update_steps(self, local_steps, device):
+    def local_update_steps(self, local_steps, train_single_step_func):
         # print(len(self.train), self.step)
         if len(self.train) - self.step > local_steps:
             for k, (inputs, labels) in enumerate(self.train):
                 if k < self.step or k >= self.step + local_steps:
                     continue
-                self.train_single_step(inputs, labels, device)
+                train_single_step_func(inputs, labels)
             self.step = self.step + local_steps
         else:
             for k, (inputs, labels) in enumerate(self.train):
                 if k < self.step:
                     continue
-                self.train_single_step(inputs, labels, device)
+                train_single_step_func(inputs, labels)
             for j in range((local_steps-len(self.train)+self.step)//len(self.train)):
                 for k, (inputs, labels) in enumerate(self.train):
-                    self.train_single_step(inputs, labels, device)
+                    train_single_step_func(inputs, labels)
             for k, (inputs, labels) in enumerate(self.train):
                 if k >=(local_steps-len(self.train)+self.step)%len(self.train):
                     continue
-                self.train_single_step(inputs, labels, device)
+                train_single_step_func(inputs, labels)
             self.step = (local_steps-len(self.train)+self.step)%len(self.train)
-        # print(len(self.train), self.step)
-        # print(self.train_steps)
 
-    def train_single_step(self, inputs, labels, device):
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+    def train_single_step(self, inputs, labels):
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
         # zero the parameter gradients
         self.model.zero_grad()
         # forward + backward + optimize
@@ -64,13 +67,31 @@ class node():
         self.optim.step()
         # self.train_steps+=1
 
-    def local_update_epochs(self, local_epochs, device):
+    # for fedprox and ditto
+    def train_single_step_fedprox(self, inputs, labels, server, lam):
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
+        # zero the parameter gradients
+        self.model.zero_grad()
+        # forward + backward + optimize
+        outputs = self.model(inputs)
+        # optim
+        reg = 0
+        for p,q in zip(self.model.parameters(), server.model.parameters()):
+            reg += torch.square(LA.vector_norm((p-q),2))
+        self.loss = self.objective(outputs, labels) + lam*reg/2
+        # print(self.objective(outputs, labels))
+        self.loss.backward()
+        self.optim.step()
+        # print('after', self.objective(self.model(inputs), labels))
+
+    def local_update_epochs(self, local_epochs):
         # local_steps may be better!!
         running_loss = 0
         for j in range(local_epochs):
             for k, (inputs, labels) in enumerate(self.train):
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device)
                 # zero the parameter gradients
                 self.model.zero_grad()
                 # forward + backward + optimize
@@ -86,69 +107,48 @@ class node():
                           (j, k+1, self.id, running_loss/20))
                     running_loss = 0
 
-    def local_update_ditto(self, local_steps, device, server, lam):
-        # print(len(self.train), self.step)
-        if len(self.train) - self.step > local_steps:
-            for k, (inputs, labels) in enumerate(self.train):
-                if k < self.step or k >= self.step + local_steps:
-                    continue
-                self.train_single_step_ditto(inputs, labels, device, server, lam)
-            self.step = self.step + local_steps
-        else:
-            for k, (inputs, labels) in enumerate(self.train):
-                if k < self.step:
-                    continue
-                self.train_single_step_ditto(inputs, labels, device, server, lam)
-            for j in range((local_steps-len(self.train)+self.step)//len(self.train)):
-                for k, (inputs, labels) in enumerate(self.train):
-                    self.train_single_step_ditto(inputs, labels, device, server, lam)
-            for k, (inputs, labels) in enumerate(self.train):
-                if k >=(local_steps-len(self.train)+self.step)%len(self.train):
-                    continue
-                self.train_single_step_ditto(inputs, labels, device, server, lam)
-            self.step = (local_steps-len(self.train)+self.step)%len(self.train)
+    # for IFCA
+    def local_train_loss(self, model):
+        model.to(self.device)
+        train_loss = 0
+        for k, (inputs, labels) in enumerate(self.train):
+            inputs = inputs.to(self.device)
+            labels = labels.to(self.device)
+            # forward
+            outputs = model(inputs)
+            train_loss += self.objective(outputs, labels)
+        return train_loss
 
-    def train_single_step_ditto(self, inputs, labels, device, server, lam):
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        # zero the parameter gradients
-        self.model.zero_grad()
-        # forward + backward + optimize
-        outputs = self.model(inputs)
-        # optim
-        reg = 0
-        for p,q in zip(self.model.parameters(),server.model.parameters()):
-            reg += torch.norm((p-q),2)
-        self.loss = self.objective(outputs, labels) + lam*reg/2
-        self.loss.backward()
-        self.optim.step()
-
-    def local_test(self, device):
-        correct = 0
-        total = 0
+    def local_test(self):
+        predict_ts = torch.empty(0).to(self.device)
+        label_ts = torch.empty(0).to(self.device)
         with torch.no_grad():
             for data in self.test:
                 inputs, labels = data
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-        print('Accuracy of Device %d on the %d test cases: %.2f %%' % (self.id, total, 100*correct / total))
-        self.accuracy.append(correct / total)
-
-    def model_representation(self, test_set, repr='output'):
-        self.model_repr = self.model(test_set)/len(test_set)
-        return self.model_repr
-
-    def log(self):
-        pass
+                predict_ts = torch.cat([predict_ts, predicted], 0)
+                label_ts = torch.cat([label_ts, labels], 0)
+        acc = accuracy_score(label_ts.cpu(), predict_ts.cpu())
+        macro_f1 = f1_score(label_ts.cpu(), predict_ts.cpu(), average='macro')
+        micro_f1 = f1_score(label_ts.cpu(), predict_ts.cpu(), average='micro')
+        print('Accuracy, Macro F1, Micro F1 of Device %d on the %d test cases: %.2f %%, %.2f, %.2f' % (self.id, len(label_ts), acc*100, macro_f1, micro_f1))
+        self.test_metrics.append([acc, macro_f1, micro_f1])
 
 
-class nodes_control(node):
-    def __init__(self, id_list):
-        pass
+#     def model_representation(self, test_set, repr='output'):
+#         self.model_repr = self.model(test_set)/len(test_set)
+#         return self.model_repr
 
-    def assign_one_model(self, model):
-        pass
+#     def log(self):
+#         pass
+
+
+# class nodes_control(node):
+#     def __init__(self, id_list):
+#         pass
+
+#     def assign_one_model(self, model):
+#         pass

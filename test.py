@@ -1,5 +1,5 @@
 import os
-from fedbase.baselines import Central, Fedavg, Ditto, WCFL, Local, Fedavg_finetune
+from fedbase.baselines import central, fedavg, ditto, wecfl, local, fedavg_finetune, fedprox, ifca
 from fedbase.model.model import CNNCifar, CNNMnist, CNNFashion_Mnist
 from fedbase.nodes.node import node
 from fedbase.utils.utils import unpack_args
@@ -15,43 +15,48 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 global_rounds = 20
 num_nodes = 200
 local_steps = 10
-optimizer = partial(optim.SGD,lr=0.001,momentum=0.9)
+optimizer = partial(optim.SGD,lr=0.001, momentum=0.9)
 
 
 @unpack_args
 def main0(seeds, dataset_splited, model):
     np.random.seed(seeds)
-    Fedavg.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    Fedavg_finetune.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10)
-    # Local.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # Ditto.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95)
+    fedavg.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    fedavg_finetune.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10)
+    # local.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    # ditto.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95)
 
 @unpack_args
 def main1(seeds, dataset_splited, model):
     np.random.seed(seeds)
-    # Fedavg.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # Fedavg_finetune.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10)
-    Local.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    Ditto.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95)
+    # fedavg.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    # fedavg_finetune.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10)
+    local.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    ditto.run(dataset_splited, 64, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95)
 
 @unpack_args
 def main2(seeds, dataset_splited, model, K):
     np.random.seed(seeds)
-    WCFL.run(dataset_splited, 64, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    wecfl.run(dataset_splited, 64, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
 
 @unpack_args
 def main3(seeds, dataset_splited, K):
     np.random.seed(seeds)
-    Central.run(dataset_splited, 64, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds)
+    central.run(dataset_splited, 64, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds)
     
 # multiprocessing
 if __name__ == '__main__':
     # data_process('cifar10').split_dataset(200,2,'class')
     # data_process('fashion_mnist').split_dataset_groupwise(5,0.1,'dirichlet',40,10,'dirichlet')
-    # data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',40,5,'dirichlet')
+    # data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',40,5,'class')
     # data_process('cifar10').split_dataset(30,0.1,'dirichlet')
-    # WCFL.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), 64, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # print(a)
+    # data_process('cifar10').split_dataset_groupwise(3,0.1,'dirichlet',10,10,'dirichlet')
+    ditto.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10, 0.95)
+    fedprox.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10, 1)
+    fedavg.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10)
+    wecfl.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), 64, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    ifca.run(data_process('fashion_mnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 10, 5, 'dirichlet'), 64, 5, 50, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    print(a)
     multi_processes = 4
     seeds = 1
     # Run

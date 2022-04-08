@@ -5,16 +5,17 @@ import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import os
+from functools import partial
 
 def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg_lam, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
 
-    server = server_class()
-    server.assign_model(model(), device)
+    server = server_class(device)
+    server.assign_model(model())
 
-    nodes = [node(i) for i in range(num_nodes)]
+    nodes = [node(i, device) for i in range(num_nodes)]
     local_models = [model() for i in range(num_nodes)]
     local_loss = [objective() for i in range(num_nodes)]
 
@@ -24,7 +25,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         nodes[i].assign_train(DataLoader(train_splited[i], batch_size=batch_size, shuffle=True))
         nodes[i].assign_test(DataLoader(test_splited[i],batch_size=batch_size, shuffle=False))
         # model
-        nodes[i].assign_model(local_models[i], device)
+        nodes[i].assign_model(local_models[i])
         # objective
         nodes[i].assign_objective(local_loss[i])
         # optim
@@ -38,10 +39,10 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         print('-------------------Global round %d start-------------------' % (i))
         # single-processing!
         for j in range(num_nodes):
-            nodes[j].local_update_ditto(local_steps, device, server, reg_lam)
-            nodes[j].local_test(device)
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, server=server, lam= reg_lam))
+            nodes[j].local_test()
         # server aggregation
-        server.aggregate(nodes, list(range(num_nodes)), device)
+        server.aggregate(nodes, list(range(num_nodes)))
         # test accuracy
         server.acc(nodes, list(range(num_nodes)))
 

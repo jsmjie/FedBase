@@ -14,16 +14,16 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
     testloader = DataLoader(testset, batch_size=batch_size,
                                          shuffle=False)
 
-    nodes0 = node(0)
+    nodes0 = node(0, device)
     nodes0.assign_train(trainloader)
     nodes0.assign_test(testloader)
-    nodes0.assign_model(model(), device)
+    nodes0.assign_model(model())
     nodes0.assign_objective(objective())
     nodes0.assign_optim(optimizer(nodes0.model.parameters()))
 
     print('-------------------start-------------------')
     for i in range(global_rounds):
-        nodes0.local_update_epochs(1, device)
+        nodes0.local_update_epochs(1)
         nodes0.local_test(device)
 
     # log

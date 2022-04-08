@@ -7,6 +7,17 @@ An easy, modularized, DIY Federated Learning framework with many baselines for i
 pip install --upgrade fedbase
 ```
 
+## Baselines
+1. Centralized training
+2. Local training
+3. FedAvg
+4. FedAvg + Finetune
+5. Fedprox
+5. Ditto
+6. WeCFL
+7. IFCA
+8. To be continued...
+
 ## Three steps to achieve FedAvg!
 1. Data partition
 2. Nodes and server simulation
@@ -50,14 +61,3 @@ pip install --upgrade fedbase
 6. Visualization
 
 ## How to develop your own FL with fedbase?
-
-## Baselines
-1. Centralized training
-2. Local training
-3. FedAvg
-4. FedAvg + Finetune
-5. Ditto
-6. WCFL
-
-
-## To be continued...

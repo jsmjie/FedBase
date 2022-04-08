@@ -8,6 +8,7 @@ from fedbase.model.model import CNNCifar, CNNMnist
 import os
 import sys
 import inspect
+from functools import partial
 
 def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
@@ -40,7 +41,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         print('-------------------Global round %d start-------------------' % (i))
         # single-processing!
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, device)
+            nodes[j].local_update_steps(local_steps, device, partial(nodes[j].train_single_step))
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)
         # server aggregation and distribution by cluster

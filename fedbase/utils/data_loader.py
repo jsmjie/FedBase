@@ -9,7 +9,8 @@ import matplotlib as mpl
 from fedbase.utils.utils import get_targets
 from fedbase.utils import femnist
 import os
-import pickle
+# import pickle
+import json
 import datetime as d
 import math
 import pandas as pd
@@ -154,7 +155,7 @@ class data_process:
         return train_splited, test_splited, self.dataset_name +'_'+ str(num0)+'_'+ str(alpha0)+'_'+ str(method0)+'_'+ str(num1)+'_'+ str(alpha1)+'_'+ str(method1)
 
     def plot_split(self, labels, train_splited):
-        return None
+        # return None
         train_size = []
         for x in train_splited:
             tmp = []
@@ -171,30 +172,32 @@ class data_process:
                 train_size[:i], 0), label=str(int(labels[i])))
         # plt.title("Data distribution of dataset")
         plt.legend()
-        mpl.rcParams['figure.dpi'] = 300
-        plt.show()
+        # plt.title('Group-wise Non-IID Setting', fontsize = 20)
+        plt.xlabel('Dataset size', fontsize=16)
+        plt.ylabel('Client ID', fontsize=16)
+        # plt.show()
 
 def log(file_name, nodes, server):
-    local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%m%d_%H%M%S")+'_'+str(np.random.choice(10**3)) + ".pkl"
+    local_file = './log/' + file_name + "_" + d.datetime.now().strftime("%m%d_%H%M%S")+'_'+str(np.random.choice(10**3)) + ".json"
     log = {}
     log['node'] = {}
     for i in range(len(nodes)):
-        log['node'][str(i)] = nodes[i].accuracy
+        log['node'][str(i)] = nodes[i].test_metrics
     try:
-        log['server'] = server.accuracy
+        log['server'] = server.test_metrics
         log['clustering'] = server.clustering
     except:
         print('No server')
     # pd.to_pickle(log, local_file)
     Path(local_file).parent.mkdir(parents=True, exist_ok=True)
-    with  open(local_file, 'wb') as handle:
-        pickle.dump(log, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with  open(local_file, 'w') as handle:
+        json.dump(log, handle, indent=4)
 
     # read
     if os.path.exists(local_file):
-        with open(local_file, 'rb') as f:
-            log = pickle.load(f)
-            print(log)
+        with open(local_file, 'r') as f:
+            log = json.load(f)
+            # print(log)
 
 # dt = data_process('mnist')
 # # dt.split_dataset(50, 2, method='class')
