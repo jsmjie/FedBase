@@ -126,18 +126,20 @@ class data_process:
                                                 0][offset-length:offset] for offset, length in zip(_accumulate(test_size[j, :]), test_size[j, :])])
                     # how to deal with 0?
                     for i in range(num_nodes):
-                        if len(ConcatDataset([Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))>0:
+                        if len(ConcatDataset([Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))>5: # 0-10, to control the minimun length
                             train_splited.append(ConcatDataset(
                                 [Subset(train_dataset, train_label_index[j][i]) for j in range(len(labels))]))
                             test_splited.append(ConcatDataset(
                                 [Subset(test_dataset, test_label_index[j][i]) for j in range(len(labels))]))
                 while len(test_splited)<num_nodes:
-                    print(self.dataset_name,len(test_splited),num_nodes-len(test_splited))
+                    # print(self.dataset_name,len(test_splited),num_nodes-len(test_splited))
                     random_index = np.random.choice(range(len(test_splited)), num_nodes-len(test_splited), replace=True)
                     train_splited = train_splited + [train_splited[i] for i in range(len(train_splited)) if i in random_index]           
                     test_splited = test_splited + [test_splited[i] for i in range(len(test_splited)) if i in random_index]  
                 if plot_show:
                     self.plot_split(labels, train_splited)
+                # print(min([len(i) for i in train_splited]))
+                # print(min([len(i) for i in test_splited]))
                 return train_splited, test_splited, self.dataset_name +'_'+ str(num_nodes)+'_'+ str(alpha)+'_'+ str(method)
         
     def split_dataset_groupwise(self, num0, alpha0, method0, num1, alpha1, method1, train_dataset = None, test_dataset = None, plot_show = False):

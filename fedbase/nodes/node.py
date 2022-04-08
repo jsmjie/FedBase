@@ -78,7 +78,8 @@ class node():
         # optim
         reg = 0
         for p,q in zip(self.model.parameters(), server.model.parameters()):
-            reg += torch.square(LA.vector_norm((p-q),2))
+            # reg += torch.square(LA.vector_norm((p-q),2))
+            reg += torch.square(torch.norm((p-q),2))
         self.loss = self.objective(outputs, labels) + lam*reg/2
         # print(self.objective(outputs, labels))
         self.loss.backward()
