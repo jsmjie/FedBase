@@ -108,6 +108,7 @@ class node():
                     print('[%d %d] node_%d loss: %.3f' %
                           (j, k+1, self.id, running_loss/20))
                     running_loss = 0
+        torch.cuda.empty_cache()
 
     # for IFCA
     def local_train_loss(self, model):
@@ -119,8 +120,10 @@ class node():
             # forward
             outputs = model(inputs)
             train_loss += self.objective(outputs, labels)
+            if k>=2:
+                break
         torch.cuda.empty_cache()
-        return train_loss
+        return train_loss/(k+1)
 
     def local_test(self):
         predict_ts = torch.empty(0).to(self.device)
