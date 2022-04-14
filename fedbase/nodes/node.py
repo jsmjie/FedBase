@@ -122,7 +122,7 @@ class node():
             train_loss += self.objective(outputs, labels)
             if k>=2:
                 break
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
         return train_loss/(k+1)
 
     def local_test(self):
@@ -143,7 +143,7 @@ class node():
         # print('Accuracy, Macro F1, Micro F1 of Device %d on the %d test cases: %.2f %%, %.2f, %.2f' % (self.id, len(label_ts), acc*100, macro_f1, micro_f1))
         print('Accuracy, Macro F1 of Device %d on the %d test cases: %.2f %%, %.2f %%' % (self.id, len(label_ts), acc*100, macro_f1*100))
         self.test_metrics.append([acc, macro_f1])
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
 
 #     def model_representation(self, test_set, repr='output'):
