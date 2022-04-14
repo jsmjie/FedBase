@@ -11,7 +11,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
-
+    print('data splited')
     server = server_class(device)
     server.assign_model(model())
 
