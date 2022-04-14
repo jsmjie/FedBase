@@ -62,6 +62,7 @@ class server_class():
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
         print('Accuracy on the %d test cases: %.2f %%' % (total, 100*correct / total))
+        torch.cuda.empty_cache()
 
     def model_similarity(model_repr_1, model_repr_2, repr='output'):
         if repr == 'output':

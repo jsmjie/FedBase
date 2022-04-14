@@ -53,6 +53,7 @@ class node():
                     continue
                 train_single_step_func(inputs, labels)
             self.step = (local_steps-len(self.train)+self.step)%len(self.train)
+        torch.cuda.empty_cache()
 
     def train_single_step(self, inputs, labels):
         inputs = inputs.to(self.device)
@@ -118,6 +119,7 @@ class node():
             # forward
             outputs = model(inputs)
             train_loss += self.objective(outputs, labels)
+        torch.cuda.empty_cache()
         return train_loss
 
     def local_test(self):
@@ -138,6 +140,7 @@ class node():
         # print('Accuracy, Macro F1, Micro F1 of Device %d on the %d test cases: %.2f %%, %.2f, %.2f' % (self.id, len(label_ts), acc*100, macro_f1, micro_f1))
         print('Accuracy, Macro F1 of Device %d on the %d test cases: %.2f %%, %.2f %%' % (self.id, len(label_ts), acc*100, macro_f1*100))
         self.test_metrics.append([acc, macro_f1])
+        torch.cuda.empty_cache()
 
 
 #     def model_representation(self, test_set, repr='output'):
