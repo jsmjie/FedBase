@@ -71,8 +71,8 @@ if __name__ == '__main__':
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), 64, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), 64, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('fashion_mnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), 64, 10, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    fedprox.run(data_process('cifar10').split_dataset_groupwise(10,6,'class',20,5,'class'), 64, num_nodes, CNNCifar,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 1)
-    print(a)
+    # fedprox.run(data_process('cifar10').split_dataset_groupwise(10,6,'class',20,5,'class'), 64, num_nodes, CNNCifar,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 1)
+    # print(a)
     multi_processes = 4
     seeds = 1
     # Run
