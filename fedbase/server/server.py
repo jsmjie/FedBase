@@ -33,7 +33,7 @@ class server_class():
         self.model.load_state_dict(aggregated_weights)
     
     def acc(self, nodes, idlist, weight_type='data_size'):
-        global_test_metrics = [0]*3
+        global_test_metrics = [0]*2
         sum_size = sum([nodes[i].data_size for i in idlist])
         for i in idlist:
             if weight_type == 'equal':
@@ -42,7 +42,7 @@ class server_class():
                 weight = nodes[i].data_size/sum_size
             for j in range(len(global_test_metrics)):
                 global_test_metrics[j] += weight*nodes[i].test_metrics[-1][j]
-        print('GLOBAL Accuracy, Macro F1, Micro F1 is %.2f %%, %.2f, %.2f' % (100*global_test_metrics[0],global_test_metrics[1],global_test_metrics[2]))
+        print('GLOBAL Accuracy, Macro F1 is %.2f %%, %.2f %%' % (100*global_test_metrics[0],global_test_metrics[1]))
         self.test_metrics.append(global_test_metrics)
                
     def distribute(self, nodes, idlist):

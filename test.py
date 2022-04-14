@@ -12,7 +12,7 @@ import multiprocessing as mp
 import time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-global_rounds = 100
+global_rounds = 1
 num_nodes = 200
 local_steps = 10
 batch_size = 64

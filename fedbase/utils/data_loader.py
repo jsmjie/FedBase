@@ -142,7 +142,7 @@ class data_process:
                 # print(min([len(i) for i in test_splited]))
                 return train_splited, test_splited, self.dataset_name +'_'+ str(num_nodes)+'_'+ str(alpha)+'_'+ str(method)
         
-    def split_dataset_groupwise(self, num0, alpha0, method0, num1, alpha1, method1, train_dataset = None, test_dataset = None, plot_show = True):
+    def split_dataset_groupwise(self, num0, alpha0, method0, num1, alpha1, method1, train_dataset = None, test_dataset = None, plot_show = False):
         train_dataset = self.train_dataset if train_dataset is None else train_dataset
         test_dataset = self.test_dataset if test_dataset is None else test_dataset
         train_targets = get_targets(train_dataset)
