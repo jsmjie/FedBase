@@ -53,7 +53,7 @@ class node():
                     continue
                 train_single_step_func(inputs, labels)
             self.step = (local_steps-len(self.train)+self.step)%len(self.train)
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
     def train_single_step(self, inputs, labels):
         inputs = inputs.to(self.device)
@@ -108,7 +108,7 @@ class node():
                     print('[%d %d] node_%d loss: %.3f' %
                           (j, k+1, self.id, running_loss/20))
                     running_loss = 0
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
     # for IFCA
     def local_train_loss(self, model):
