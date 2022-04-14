@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import os
+from functools import partial
 
 
 def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, finetune_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
@@ -50,7 +51,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
 
     # fine tune
     for j in range(num_nodes):
-        nodes[j].local_update_steps(finetune_steps)
+        nodes[j].local_update_steps(finetune_steps, partial(nodes[j].train_single_step))
         nodes[j].local_test()
     server.acc(nodes, list(range(num_nodes)))
 

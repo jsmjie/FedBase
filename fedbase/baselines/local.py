@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import os
+from functools import partial
 
 
 def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
