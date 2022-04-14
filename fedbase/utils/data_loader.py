@@ -191,10 +191,10 @@ def log(file_name, nodes, server):
     log = {}
     log['node'] = {}
     for i in range(len(nodes)):
-        log['node'][str(i)] = nodes[i].test_metrics
+        log['node'][str(i)] = list(nodes[i].test_metrics)
     try:
-        log['server'] = server.test_metrics
-        log['clustering'] = server.clustering
+        log['server'] = list(server.test_metrics)
+        log['clustering'] = list(server.clustering)
     except:
         print('No server')
     # pd.to_pickle(log, local_file)

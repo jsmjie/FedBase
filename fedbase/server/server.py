@@ -84,7 +84,7 @@ class server_class():
         print(labels)
         for i in idlist:
             nodes[i].label = labels[i]
-        self.clustering['label'].append(labels)
+        self.clustering['label'].append(list(labels))
         # self.clustering['raw'].append(X)
         # self.clustering['center'].append(kmeans.cluster_centers_)
 
