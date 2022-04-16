@@ -49,6 +49,9 @@ class server_class():
         for i in idlist:
             nodes[i].model.load_state_dict(self.model.state_dict())
 
+    def client_sampling(self, frac, distribution):
+        pass
+
     def test(self, test_loader):
         correct = 0
         total = 0
@@ -89,7 +92,6 @@ class server_class():
         # self.clustering['raw'].append(X)
         # self.clustering['center'].append(kmeans.cluster_centers_)
 
-    
     def clustering_plot(self):
         # print(self.clustering)
         # self.clustering =[[1,1,2,2,3,3],[1,1,1,2,2,2],[1, 1, 1, 2, 2, 2],[1, 1, 1, 2, 2, 2]]
