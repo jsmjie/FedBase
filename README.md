@@ -16,6 +16,7 @@ pip install --upgrade fedbase
 5. Ditto, [Ditto: Fair and Robust Federated Learning Through Personalization](https://arxiv.org/abs/2012.04221)
 6. WeCFL, [On the Convergence of Clustered Federated Learning](https://arxiv.org/abs/2202.06187)
 7. IFCA, [An Efficient Framework for Clustered Federated Learning](https://arxiv.org/abs/2006.04088)
+8. FeSEM, [Multi-Center Federated Learning](https://arxiv.org/abs/2005.01026)
 8. To be continued...
 
 ## Three steps to achieve FedAvg!
