@@ -10,7 +10,7 @@ import sys
 import inspect
 from functools import partial
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -57,7 +57,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
         # local update
         for i in range(num_nodes):
-            nodes[i].local_update_steps(local_steps, partial(nodes[i].train_single_step))
+            if not reg:
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
+            else:
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
 
         # server aggregation and distribution by cluster
         for k in range(K):
@@ -72,4 +75,4 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.acc(nodes, list(range(num_nodes)))
 
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg) + '_' + split_para, nodes, server)

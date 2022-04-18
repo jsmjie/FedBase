@@ -24,7 +24,7 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
     print('-------------------start-------------------')
     for i in range(global_rounds):
         nodes0.local_update_epochs(1)
-        nodes0.local_test(device)
+        nodes0.local_test()
 
     # log
     log(os.path.basename(__file__)[:-3]+ '_' + str(dataset), [nodes0], server={})

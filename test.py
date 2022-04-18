@@ -1,9 +1,10 @@
 import os
-from fedbase.baselines import central, fedavg, ditto, wecfl, local, fedavg_finetune, fedprox, ifca
+from fedbase.baselines import central, fedavg, ditto, wecfl, local, fedavg_finetune, fedprox, ifca, fesem
 from fedbase.model.model import CNNCifar, CNNMnist, CNNFashion_Mnist
 from fedbase.nodes.node import node
 from fedbase.utils.utils import unpack_args
 from fedbase.utils.data_loader import data_process
+import torch
 import torch.optim as optim
 import torch.nn as nn
 from functools import partial
@@ -17,26 +18,30 @@ num_nodes = 200
 local_steps = 10
 batch_size = 32
 optimizer = partial(optim.SGD,lr=0.001, momentum=0.9)
+# device = torch.device('cuda:2')
+device = torch.device('cuda')
 
 @unpack_args
 def main0(seeds, dataset_splited, model):
     np.random.seed(seeds)
-    central.run(dataset_splited, batch_size, model, nn.CrossEntropyLoss, optimizer, global_rounds)
+    central.run(dataset_splited, batch_size, model, nn.CrossEntropyLoss, optimizer, global_rounds, device = device)
 
 @unpack_args
 def main1(seeds, dataset_splited, model):
     np.random.seed(seeds)
-    fedavg.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    fedavg_finetune.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10)
-    local.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    ditto.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95)
-    fedprox.run(dataset_splited, batch_size, num_nodes, model,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.1)
+    fedavg.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    fedavg_finetune.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10, device = device)
+    local.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    ditto.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    fedprox.run(dataset_splited, batch_size, num_nodes, model,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.1, device = device)
 
 @unpack_args
 def main2(seeds, dataset_splited, model, K):
     np.random.seed(seeds)
-    wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    ifca.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    # wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    ifca.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    fesem.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
     
 # multiprocessing
 if __name__ == '__main__':
@@ -55,7 +60,7 @@ if __name__ == '__main__':
     # ifca.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # print(a)
     multi_processes = 4
-    seeds = 3
+    seeds = 1
     # Run
     # main1((1,0.5,'dirichlet',3))
     start = time.perf_counter()

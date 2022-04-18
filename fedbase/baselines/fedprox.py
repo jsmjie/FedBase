@@ -39,7 +39,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         print('-------------------Global round %d start-------------------' % (i))
         # single-processing!
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, server=server, lam= reg_lam))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.model, lam= reg_lam))
         # server aggregation and distribution
         server.aggregate(nodes, list(range(num_nodes)))
         server.distribute(nodes, list(range(num_nodes)))
@@ -49,4 +49,4 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         server.acc(nodes, list(range(num_nodes)))
 
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + split_para , nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(reg_lam) + '_' + split_para , nodes, server)

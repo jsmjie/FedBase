@@ -69,7 +69,7 @@ class node():
         # self.train_steps+=1
 
     # for fedprox and ditto
-    def train_single_step_fedprox(self, inputs, labels, server, lam):
+    def train_single_step_fedprox(self, inputs, labels, reg_model, lam):
         inputs = inputs.to(self.device)
         labels = labels.to(self.device)
         # zero the parameter gradients
@@ -78,7 +78,7 @@ class node():
         outputs = self.model(inputs)
         # optim
         reg = 0
-        for p,q in zip(self.model.parameters(), server.model.parameters()):
+        for p,q in zip(self.model.parameters(), reg_model.parameters()):
             # reg += torch.square(LA.vector_norm((p-q),2))
             reg += torch.square(torch.norm((p-q),2))
         self.loss = self.objective(outputs, labels) + lam*reg/2

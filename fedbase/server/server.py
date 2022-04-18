@@ -31,6 +31,7 @@ class server_class():
             for j in nodes[i].model.state_dict().keys():
                 aggregated_weights[j] += nodes[i].model.state_dict()[j]*weight
         self.model.load_state_dict(aggregated_weights)
+        return self.model
     
     def acc(self, nodes, idlist, weight_type='data_size'):
         global_test_metrics = [0]*2
