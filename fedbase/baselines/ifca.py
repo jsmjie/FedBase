@@ -56,7 +56,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         print(assignment)
 
         # local update
-        for i in range(num_nodes):
+        for j in range(num_nodes):
             if not reg:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
