@@ -27,4 +27,4 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
         nodes0.local_test()
 
     # log
-    log(os.path.basename(__file__)[:-3]+ '_' + str(dataset), [nodes0], server={})
+    log(os.path.basename(__file__)[:-3]+ '_' + str(dt.dataset_name), [nodes0], server={})
