@@ -26,10 +26,16 @@ def get_targets(dataset):
         return torch.as_tensor(targets)[dataset.indices]
     if isinstance(dataset, data.ConcatDataset):
         return torch.cat([get_targets(sub_dataset) for sub_dataset in dataset.datasets])
-    if torch.is_tensor(dataset.targets)==False:
-        return torch.as_tensor(dataset.targets)
-    else:
-        return dataset.targets
+    try:
+        if torch.is_tensor(dataset.targets)==False:
+            return torch.as_tensor(dataset.targets)
+        else:
+            return dataset.targets
+    except:
+        if torch.is_tensor(dataset.labels)==False:
+            return torch.as_tensor(dataset.labels)
+        else:
+            return dataset.labels
     # if isinstance(
     #         dataset, (datasets.MNIST, datasets.ImageFolder,)
     # ):

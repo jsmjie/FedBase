@@ -16,6 +16,7 @@ import math
 import pandas as pd
 from pathlib import Path
 from collections import Counter
+import medmnist
 
 class data_process:
     def __init__(self, dataset_name):
@@ -51,6 +52,21 @@ class data_process:
                 dir+dataset_name, train=True, download=True, transform=apply_transform)
             self.test_dataset = datasets.FashionMNIST(
                 dir+dataset_name, train=False, download=True, transform=apply_transform)
+        elif 'medmnist' in dataset_name:
+            data_flag = dataset_name[9:]
+            DataClass = getattr(medmnist, medmnist.INFO[data_flag]['python_class'])
+            # preprocessing
+            data_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[.5], std=[.5])
+            ])
+            # load the data
+            dir = dir + dataset_name +'/'
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+            self.train_dataset = DataClass(split='train', transform=data_transform, download=True, root = dir)
+            self.test_dataset = DataClass(split='test', transform=data_transform, download=True, root = dir)
+
 
         # show image
         # batch_size = 4
@@ -181,7 +197,7 @@ class data_process:
                 train_size[:i], 0), label=str(int(labels[i])))
         # plt.title("Data distribution of dataset")
         plt.legend()
-        # plt.title('Group-wise Non-IID Setting', fontsize = 20)
+        # plt.title('Client-wise Non-IID Setting', fontsize = 20)
         plt.xlabel('Dataset size', fontsize=16)
         plt.ylabel('Client ID', fontsize=16)
         plt.show()
