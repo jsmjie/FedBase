@@ -57,7 +57,9 @@ class node():
 
     def train_single_step(self, inputs, labels):
         inputs = inputs.to(self.device)
-        labels = labels.to(self.device)
+        labels = torch.flatten(labels)
+        labels = labels.to(self.device, dtype = torch.long)
+        # print(labels)
         # zero the parameter gradients
         self.model.zero_grad()
         # forward + backward + optimize
@@ -71,7 +73,8 @@ class node():
     # for fedprox and ditto
     def train_single_step_fedprox(self, inputs, labels, reg_model, lam):
         inputs = inputs.to(self.device)
-        labels = labels.to(self.device)
+        labels = torch.flatten(labels)
+        labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
         self.model.zero_grad()
         # forward + backward + optimize
@@ -93,7 +96,8 @@ class node():
         for j in range(local_epochs):
             for k, (inputs, labels) in enumerate(self.train):
                 inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
                 # zero the parameter gradients
                 self.model.zero_grad()
                 # forward + backward + optimize
@@ -116,7 +120,8 @@ class node():
         train_loss = 0
         for k, (inputs, labels) in enumerate(self.train):
             inputs = inputs.to(self.device)
-            labels = labels.to(self.device)
+            labels = torch.flatten(labels)
+            labels = labels.to(self.device, dtype = torch.long)
             # forward
             outputs = model(inputs)
             train_loss += self.objective(outputs, labels)
@@ -132,7 +137,8 @@ class node():
             for data in self.test:
                 inputs, labels = data
                 inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 predict_ts = torch.cat([predict_ts, predicted], 0)

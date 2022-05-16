@@ -32,6 +32,7 @@ def get_targets(dataset):
         else:
             return dataset.targets
     except:
+        # print(dataset.labels)
         if torch.is_tensor(dataset.labels)==False:
             return torch.as_tensor(dataset.labels)
         else:

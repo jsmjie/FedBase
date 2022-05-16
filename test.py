@@ -1,6 +1,6 @@
 import os
 from fedbase.baselines import central, fedavg, ditto, wecfl, local, fedavg_finetune, fedprox, ifca, fesem
-from fedbase.model.model import CNNCifar, CNNMnist, CNNFashion_Mnist
+from fedbase.model.model import CNNCifar, CNNMnist, CNNFashion_Mnist, oct_net
 from fedbase.nodes.node import node
 from fedbase.utils.utils import unpack_args
 from fedbase.utils.data_loader import data_process
@@ -11,6 +11,7 @@ from functools import partial
 import numpy as np
 import multiprocessing as mp
 import time
+import torchvision.models as models
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 global_rounds = 2
@@ -62,8 +63,9 @@ if __name__ == '__main__':
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('fashion_mnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # print(a)
-    multi_processes = 4
+    ifca.run(data_process('medmnist_octmnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet', plot_show= True), batch_size, 10, num_nodes, oct_net, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    print(a)
+    multi_processes = 1
     seeds = 1
     # Run
     # main1((1,0.5,'dirichlet',3))
@@ -77,7 +79,7 @@ if __name__ == '__main__':
         # for K,n0,n1 in zip([5, 10], [5, 10],[40, 20]) for j0, k0, j1, k1 in zip([6, 0.1], ['class', 'dirichlet'], [5, 10], ['class', 'dirichlet'])])
         # client_wise
         # p.map(main1, [(i, data_process(dataset).split_dataset(num_nodes, j, k), model) for i in range(27, 27+seeds) for dataset, model in zip(['cifar10', 'fashion_mnist'],[CNNCifar, CNNFashion_Mnist]) for j, k in zip([2, 0.1], ['class', 'dirichlet'])])
-        p.map(main2, [(i, data_process(dataset).split_dataset(num_nodes, j, k), model, K) for i in range(27, 27+seeds) for dataset, model in zip(['cifar10', 'fashion_mnist'],[CNNCifar, CNNFashion_Mnist]) for j, k in zip([2, 0.1], ['class', 'dirichlet']) for K in [3,5,10]])
+        p.map(main2, [(i, data_process(dataset).split_dataset(num_nodes, j, k), model, K) for i in range(27, 27+seeds) for dataset, model in zip(['medmnist_octmnist'],[models.resnet18()]) for j, k in zip([2, 0.1], ['class', 'dirichlet']) for K in [3,5,10]])
         p.close()
     print(time.perf_counter()-start, "seconds")
 

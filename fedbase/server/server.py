@@ -60,7 +60,8 @@ class server_class():
             for data in test_loader:
                 inputs, labels = data
                 inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
                 outputs = self.model(inputs)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)

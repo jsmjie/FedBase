@@ -65,7 +65,9 @@ class data_process:
             if not os.path.exists(dir):
                 os.mkdir(dir)
             self.train_dataset = DataClass(split='train', transform=data_transform, download=True, root = dir)
+            # self.train_dataset.labels = torch.tensor(self.train_dataset.labels, dtype = torch.long)
             self.test_dataset = DataClass(split='test', transform=data_transform, download=True, root = dir)
+            # self.test_dataset.labels = torch.tensor(self.test_dataset.labels, dtype = torch.long)
 
 
         # show image
