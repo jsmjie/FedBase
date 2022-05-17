@@ -53,6 +53,8 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             assignment[m].append(i)
             nodes[i].assign_model(cluster_models[m])
             nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
+        print(server.clustering)
+        server.clustering['label'].append(assignment)
         print(assignment)
 
         # local update

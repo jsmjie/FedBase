@@ -6,6 +6,7 @@ from fedbase.model.model import CNNMnist, MLP
 from sklearn.metrics import accuracy_score, f1_score
 from fedbase.utils.utils import unpack_args
 from functools import partial
+from statistics import multimode, mode
 
 class node():
     def __init__(self, id, device):
@@ -140,6 +141,7 @@ class node():
                 labels = torch.flatten(labels)
                 labels = labels.to(self.device, dtype = torch.long)
                 outputs = self.model(inputs)
+                # print(outputs.data.dtype)
                 _, predicted = torch.max(outputs.data, 1)
                 predict_ts = torch.cat([predict_ts, predicted], 0)
                 label_ts = torch.cat([label_ts, labels], 0)
@@ -150,6 +152,39 @@ class node():
         print('Accuracy, Macro F1 of Device %d on the %d test cases: %.2f %%, %.2f %%' % (self.id, len(label_ts), acc*100, macro_f1*100))
         self.test_metrics.append([acc, macro_f1])
         # torch.cuda.empty_cache()
+
+    def local_ensemble_test(self, model_list, voting = 'soft'):
+        predict_ts = torch.empty(0).to(self.device)
+        label_ts = torch.empty(0).to(self.device)
+        with torch.no_grad():
+            for data in self.test:
+                inputs, labels = data
+                inputs = inputs.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
+                out_hard = []
+                if voting == 'soft':
+                    out = torch.zeros(self.model(inputs).data.shape).to(self.device)
+                    for model in model_list:
+                        outputs = model(inputs)
+                        out = out + outputs.data/len(model_list)
+                        _, predicted = torch.max(out, 1)
+                elif voting == 'hard':
+                    out_hard = []
+                    for model in model_list:
+                        outputs = model(inputs)
+                        _, predicted = torch.max(outputs.data, 1)
+                        out_hard.append(predicted)       
+                    predicted = torch.tensor([mode([out_hard[i][j] for i in range(len(out_hard))]) for j in range(len(out_hard[0]))]).to(self.device)
+
+                predict_ts = torch.cat([predict_ts, predicted], 0)
+                label_ts = torch.cat([label_ts, labels], 0)
+        acc = accuracy_score(label_ts.cpu(), predict_ts.cpu())
+        macro_f1 = f1_score(label_ts.cpu(), predict_ts.cpu(), average='macro')
+        # micro_f1 = f1_score(label_ts.cpu(), predict_ts.cpu(), average='micro')
+        # print('Accuracy, Macro F1, Micro F1 of Device %d on the %d test cases: %.2f %%, %.2f, %.2f' % (self.id, len(label_ts), acc*100, macro_f1, micro_f1))
+        print('Accuracy, Macro F1 of Device %d on the %d test cases: %.2f %%, %.2f %%' % (self.id, len(label_ts), acc*100, macro_f1*100))
+        self.test_metrics.append([acc, macro_f1])
 
 
 #     def model_representation(self, test_set, repr='output'):

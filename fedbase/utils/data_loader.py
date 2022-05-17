@@ -66,7 +66,7 @@ class data_process:
                 os.mkdir(dir)
             self.train_dataset = DataClass(split='train', transform=data_transform, download=True, root = dir)
             # self.train_dataset.labels = torch.tensor(self.train_dataset.labels, dtype = torch.long)
-            self.test_dataset = DataClass(split='test', transform=data_transform, download=True, root = dir)
+            self.test_dataset = DataClass(split='val', transform=data_transform, download=True, root = dir)
             # self.test_dataset.labels = torch.tensor(self.test_dataset.labels, dtype = torch.long)
 
 
@@ -212,7 +212,7 @@ def log(file_name, nodes, server):
         log['node'][str(i)] = list(nodes[i].test_metrics)
     try:
         log['server'] = list(server.test_metrics)
-        log['clustering'] = list(server.clustering)
+        log['clustering'] = server.clustering
     except:
         print('No server')
     # pd.to_pickle(log, local_file)
