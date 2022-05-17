@@ -6,7 +6,7 @@ from fedbase.model.model import CNNMnist, MLP
 from sklearn.metrics import accuracy_score, f1_score
 from fedbase.utils.utils import unpack_args
 from functools import partial
-from statistics import multimode, mode
+from statistics import mode
 
 class node():
     def __init__(self, id, device):
