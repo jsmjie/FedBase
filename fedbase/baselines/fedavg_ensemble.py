@@ -60,5 +60,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     server.acc(nodes, list(range(num_nodes)))
 
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+    # log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + '_' + str(n_ensemble) + '_' + split_para, nodes, server)
+
     
