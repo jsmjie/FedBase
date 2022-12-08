@@ -14,6 +14,7 @@ class node():
         self.test_metrics = []
         self.step = 0
         self.device = device
+        self.grads = []
         # self.train_steps = 0
 
     def assign_train(self, data):
@@ -68,6 +69,13 @@ class node():
         # optim
         self.loss = self.objective(outputs, labels)
         self.loss.backward()
+        # calculate accumulate gradients
+        grads = torch.tensor([])
+        for index, param in enumerate(self.model.parameters()):
+            # param.grad = torch.tensor(grads[index])
+            grads= torch.cat((grads, torch.flatten(param.grad).cpu()),0)
+        self.grads.append(grads)
+        
         self.optim.step()
         # self.train_steps+=1
 

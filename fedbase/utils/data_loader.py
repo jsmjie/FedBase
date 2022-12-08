@@ -40,9 +40,9 @@ class data_process:
         elif dataset_name == 'femnist':
             apply_transform = transforms.Compose(
                 [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-            train_dataset = femnist.FEMNIST(dir+dataset_name, train=True, download=False,
+            self.train_dataset = femnist.FEMNIST(dir+dataset_name, train=True, download=False,
                                             transform=apply_transform)
-            test_dataset = femnist.FEMNIST(dir+dataset_name, train=False, download=False,
+            self.test_dataset = femnist.FEMNIST(dir+dataset_name, train=False, download=False,
                                            transform=apply_transform)
         elif dataset_name == 'fashion_mnist':
             apply_transform = transforms.Compose([
@@ -66,9 +66,16 @@ class data_process:
                 os.mkdir(dir)
             self.train_dataset = DataClass(split='train', transform=data_transform, download=True, root = dir)
             # self.train_dataset.labels = torch.tensor(self.train_dataset.labels, dtype = torch.long)
-            self.test_dataset = DataClass(split='val', transform=data_transform, download=True, root = dir)
-            # self.test_dataset.labels = torch.tensor(self.test_dataset.labels, dtype = torch.long)
+            self.val_dataset = DataClass(split='val', transform=data_transform, download=True, root = dir)
+            self.test_dataset = DataClass(split='test', transform=data_transform, download=True, root = dir)
 
+            self.test_dataset = ConcatDataset([self.val_dataset, self.test_dataset])
+            # print(len(self.val_dataset), len(self.test_dataset))
+            # print(self.train_dataset)
+
+        sample = next(iter(self.train_dataset))
+        image, label = sample
+        print(image.shape)
 
         # show image
         # batch_size = 4
@@ -120,8 +127,13 @@ class data_process:
                 while len(test_splited) <= num_nodes//2:
                     # print(l_test)
                     if method == 'dirichlet':
-                        p = torch.tensor(np.round(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels)), round(math.log(len(test_dataset)/len(labels),10))))
+                        # print(len(test_dataset), min(test_label_size))
+                        # dec_round = round(math.log(len(test_dataset)/len(labels),10))
+                        dec_round = 2
+                        # p = torch.tensor(np.round(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels)), round(math.log(len(test_dataset)/len(labels),10))))
+                        p = torch.tensor(np.floor(np.random.dirichlet(np.repeat(alpha, num_nodes), len(labels))*10**dec_round)/10**dec_round)
                         # print(torch.sum(p,axis=1))
+                        # print(p)
                     elif method == 'class':
                         p = np.zeros((len(labels), 1))
                         J = np.random.choice(len(labels), alpha, replace=False)
@@ -135,6 +147,7 @@ class data_process:
                     # print(p.sum(axis=1),p)
                     train_size = torch.round(l_train*p).int()
                     test_size = torch.round(l_test*p).int()
+                    # print(train_size, test_size)
                     train_label_index = []
                     test_label_index = []
                     for j in range(len(labels)):
@@ -195,13 +208,15 @@ class data_process:
         train_size = torch.tensor(train_size).T
         # plot
         for i in range(len(labels)):
-            plt.barh(range(len(train_splited)), train_size[i, :], left=torch.sum(
+            plt.barh([j for j in range(1,len(train_splited)+1)], train_size[i, :], left=torch.sum(
                 train_size[:i], 0), label=str(int(labels[i])))
         # plt.title("Data distribution of dataset")
         plt.legend()
         # plt.title('Client-wise Non-IID Setting', fontsize = 20)
+        plt.title('Cluster-wise Non-IID Setting', fontsize = 20)
         plt.xlabel('Dataset size', fontsize=16)
         plt.ylabel('Client ID', fontsize=16)
+        # plt.ylim((0,len(train_splited)-1))
         plt.show()
 
 def log(file_name, nodes, server):
@@ -212,19 +227,19 @@ def log(file_name, nodes, server):
         log['node'][str(i)] = list(nodes[i].test_metrics)
     try:
         log['server'] = list(server.test_metrics)
-        log['clustering'] = server.clustering
+        log['clustering'] = str(server.clustering)
     except:
         print('No server')
     # pd.to_pickle(log, local_file)
+    # print(log)
     Path(local_file).parent.mkdir(parents=True, exist_ok=True)
     with  open(local_file, 'w') as handle:
         json.dump(log, handle, indent=4)
-
     # read
-    if os.path.exists(local_file):
-        with open(local_file, 'r') as f:
-            log = json.load(f)
-            # print(log)
+    # if os.path.exists(local_file):
+    #     with open(local_file, 'r') as f:
+    #         log = json.load(f)
+    #         # print(log)
 
 # dt = data_process('mnist')
 # # dt.split_dataset(50, 2, method='class')

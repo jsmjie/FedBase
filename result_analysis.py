@@ -54,51 +54,62 @@ def plt_maximize():
 # folder = './log/log_groupwise/'
 folder = './log/'
 for dataset in ['fashion_mnist', 'cifar10']:
+# for dataset in ['cifar10']:
+# for dataset in [ 'medmnist_octmnist']:
     # for noniid in ['class_2','dirichlet_0.1','dirichlet_0.5','dirichlet_1']:
-    for noniid in ['2_class','0.1_dirichlet','10_dirichlet','3_class']:
+    # for noniid in ['2_class','0.1_dirichlet','10_dirichlet','3_class']:
+    for noniid in ['2_class','0.1_dirichlet']:
     # for noniid in ['0.1','6']:
         # central
-        method = 'central'
-        file_list = glob.glob(folder+ method + '_' +'*'+dataset+'*')
-        if len(file_list)>0:
-            acc= []
-            for i in file_list:
-                with open(i, 'rb') as f:
-                    log = json.load(f)
-                    # print(len(log['server']))
-                    acc.append(log['node']['0'])
-                    # if len(log['server'])<=101:
-                    #     acc.append(log['server']
-            acc_df = pd.DataFrame(acc)
-            # print(acc_df)
-            acc_df_n = pd.DataFrame()
-            for i in acc_df.columns:
-                acc_df_tmp = acc_df[[i]]
-                acc_df_tmp.loc[:,'round'] = i+1
-                acc_df_tmp['test acc'] = acc_df_tmp[i].apply(lambda x: x[0])
-                acc_df_tmp['test macro f1'] = acc_df_tmp[i].apply(lambda x: x[1])
-                acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
-            # print(acc_df_n)
-            print(method, dataset, round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2)\
-                    , round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2))
-            sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
+        # method = 'central'
+        # file_list = glob.glob(folder+ method + '_' +'*'+dataset+'*')
+        # if len(file_list)>0:
+        #     acc= []
+        #     for i in file_list:
+        #         with open(i, 'rb') as f:
+        #             log = json.load(f)
+        #             # print(len(log['server']))
+        #             acc.append(log['node']['0'])
+        #             # if len(log['server'])<=101:
+        #             #     acc.append(log['server']
+        #     acc_df = pd.DataFrame(acc)
+        #     # print(acc_df)
+        #     acc_df_n = pd.DataFrame()
+        #     for i in acc_df.columns:
+        #         acc_df_tmp = acc_df[[i]]
+        #         acc_df_tmp.loc[:,'round'] = i+1
+        #         acc_df_tmp['test acc'] = acc_df_tmp[i].apply(lambda x: x[0])
+        #         acc_df_tmp['test macro f1'] = acc_df_tmp[i].apply(lambda x: x[1])
+        #         acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
+        #     # print(acc_df_n)
+        #     print(method, dataset, round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2)\
+        #             , round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2))
+        #     sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
         # others
         # for method in ['Local', 'Fedavg', 'Ditto',  'WCFL_3', 'WCFL_5', 'WCFL_10']:
-        # for method in ['local', 'fedavg', 'fedavg_finetune', 'ditto', 'fedprox', 'wecfl_3', 'wecfl_5', 'wecfl_10', 'ifca_3', 'ifca_5', 'ifca_10', 'fesem_3', 'fesem_5', 'fesem_10',\
+        # for method in ['local', 'fedavg', 'fedavg_finetune', 'ditto','ditto_0.95', 'fedprox','fedprox_0.1', 'wecfl_3', 'wecfl_5', 'wecfl_10', 'ifca_3', 'ifca_5', 'ifca_10', 'fesem_3', 'fesem_5', 'fesem_10',\
         #     'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'ifca_3_0.95', 'ifca_5_0.95', 'ifca_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
-        for method in [ 'fedavg', 'ifca_3', 'ifca_5', 'ifca_10','fesem_3', 'fesem_5', 'fesem_10', 'wecfl_3', 'wecfl_5', 'wecfl_10']:
-        # for method in ['Fedavg', 'Ditto', 'Local', 'WCFL_5', 'WCFL_10']:
+        # for method in ['fedavg', 'fedprox', 'ditto','ifca_3', 'ifca_5', 'ifca_10','fesem_3', 'fesem_5', 'fesem_10', 'wecfl_3', 'wecfl_5', 'wecfl_10', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5', 'fedprox_ensemble_10']:
+        # for method in ['fedavg', 'fedprox', 'ditto', 'ifca_10', 'fesem_10', 'wecfl_10', 'fedavg_ensemble_10','fedprox_ensemble_10']:
+        # for method in ['fedavg_ensemble_5','fedprox_ensemble_5','fedavg_ensemble_10','fedprox_ensemble_10']:
+        for method in ['fedprox_ensemble_5_0.95','fedprox_ensemble_10_0.95']:
+        # for method in ['fedavg','fedprox']:
+        # for method in ['wecfl_3', 'wecfl_5', 'wecfl_10', 'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
+        # for method in ['wecfl_5_0.95']:
         # for method in ['fedavg', 'ditto', 'local', 'cfl']:
             file_list = glob.glob(folder+ method + '_' +dataset+'*'+ noniid +'*')
             if len(file_list)>0:
                 acc= []
                 for i in file_list:
                     with open(i, 'rb') as f:
-                        log = json.load(f)
-                        # print(len(log['server']))
-                        # acc.append(log['node']['0'])
-                        if len(log['server'])<=101:
-                            acc.append(log['server'])
+                        try:
+                            log = json.load(f)
+                            # print(len(log['server']))
+                            # acc.append(log['node']['0'])
+                            if len(log['server'])<=101:
+                                acc.append(log['server'])
+                        except:
+                            pass
                 acc_df = pd.DataFrame(acc)
                 # print(acc_df)
                 acc_df_n = pd.DataFrame()
@@ -111,9 +122,10 @@ for dataset in ['fashion_mnist', 'cifar10']:
                     # acc_df_tmp = acc_df_tmp.rename(columns={i : 'test acc'})
                     acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
                 # print(acc_df_n)
-                print(method, dataset, noniid, round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2)\
-                    , round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2))
-                sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
+                print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2))\
+                    ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2)))
+                # acc_df_n.to_csv('./vis/nips2022/' + method + '_'+ noniid + dataset +'.csv')
+                # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
                 # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = method)
 
         sns.set_theme(style="darkgrid")
@@ -125,3 +137,49 @@ for dataset in ['fashion_mnist', 'cifar10']:
         plt.savefig(local_file)
         plt.close()
         
+
+# file_list = glob.glob('./vis/nips2022/'+'*.csv')
+# print(file_list)
+# label_list = ['Ditto', 'Fedavg+(10)', 'Fedprox+(10)', 'FeSEM(10)', 'IFCA(10)', 'WeCFL(10)', 'WeCFL(10)', 'WeCFL(3)', 'WeCFL(5)']
+# sns.set_theme(style="darkgrid")
+# # list_index = [7,8,6]
+# list_index = [4,3,5]
+# for i in list_index:
+# # for f in file_list:
+#     acc_df_n = pd.read_csv(file_list[i])
+#     sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = label_list[i])
+#     # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = label_list[i])    
+# # plt.title('Test Accuracy on CIFAR10 under <3,2>-class setting', fontsize=16)
+# plt.xlabel('Round', fontsize=16)
+# # plt.ylabel('Test Macro F1', fontsize=16)
+# plt.ylabel('Test Accuracy', fontsize=16)
+# # plt.ylim((0.8,1))
+# plt.legend(loc =2)
+
+# # plt.show()
+# local_file = './vis/nips2022/' + 'acc' +'.png'
+# # local_file = './vis/nips2022/' + 'f1' +'.png'
+# Path(local_file).parent.mkdir(parents=True, exist_ok=True)
+
+# # plt_maximize()
+# plt.savefig(local_file)
+# plt.close()
+
+# for i in list_index:
+# # for f in file_list:
+#     acc_df_n = pd.read_csv(file_list[i])
+#     # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = label_list[i])
+#     sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = label_list[i])    
+# # plt.title('Test Macro F1 on CIFAR10 under <3,2>-class setting', fontsize=16)
+# plt.xlabel('Round', fontsize=16)
+# plt.ylabel('Test Macro F1', fontsize=16)
+# # plt.ylim((0.5,1))
+# # plt.ylabel('Test Accuracy', fontsize=16)
+
+# # plt.show()
+# # local_file = './vis/nips2022/' + 'acc' +'.png'
+# local_file = './vis/nips2022/' + 'f1' +'.png'
+# Path(local_file).parent.mkdir(parents=True, exist_ok=True)
+# # plt_maximize()
+# plt.savefig(local_file)
+# plt.close()

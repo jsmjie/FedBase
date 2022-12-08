@@ -90,9 +90,26 @@ class server_class():
         print(labels)
         for i in idlist:
             nodes[i].label = labels[i]
-        self.clustering['label'].append(list(labels))
+        self.clustering['label'].append(list(labels.astype(int)))
         # self.clustering['raw'].append(X)
         # self.clustering['center'].append(kmeans.cluster_centers_)
+
+    def calculate_B(self, nodes, idlist):
+        sum_size = sum([nodes[i].data_size for i in idlist])
+        # print(idlist, sum_size)
+        avg = sum([sum(nodes[i].grads)*(nodes[i].data_size)/sum_size for i in idlist])
+        # print(avg[-10:], nodes[idlist[0]].grads[0][-10:])
+        # print(avg.shape, nodes[idlist[0]].grads.shape)
+        B_list = []
+        u_list = []
+        for i in idlist:
+            # print(torch.norm((sum(nodes[i].grads) - avg), 1)/torch.norm(avg, 1))
+            # print(torch.norm((sum(nodes[i].grads) - avg), 1))
+            u_list.append(float(torch.norm((sum(nodes[i].grads) - avg), 2)))
+            B_list.append(float(torch.norm((sum(nodes[i].grads) - avg), 2)/torch.norm(avg, 2)))
+            # nodes[i].grads = []
+            # print(torch.norm(nodes[i].grads - avg, 2),torch.norm(avg, 2))
+        return B_list, u_list
 
     def clustering_plot(self):
         # print(self.clustering)
