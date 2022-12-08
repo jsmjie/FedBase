@@ -1,5 +1,5 @@
 from sklearn.manifold import TSNE
-from keras.datasets import mnist
+# from keras.datasets import mnist
 from sklearn.datasets import load_iris
 from numpy import reshape
 import seaborn as sns
