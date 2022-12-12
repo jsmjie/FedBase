@@ -64,10 +64,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         #     dimension_reduction(cluster_data, cluster_label, method= 'tsne')
         # plot B
         # print(server.calculate_B(nodes, range(20)))
-        B_list, u_list = server.calculate_B(nodes, range(20))
-        b_list.append(max(B_list))
-        uu_list.append(max(u_list))
-        print(b_list, uu_list)
+        # B_list, u_list = server.calculate_B(nodes, range(20))
+        # b_list.append(max(B_list))
+        # uu_list.append(max(u_list))
+        # print(b_list, uu_list)
         for k in range(num_nodes):
             nodes[k].grads = []
         # print(a)
