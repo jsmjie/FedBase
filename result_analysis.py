@@ -53,13 +53,19 @@ def plt_maximize():
 
 # folder = './log/log_groupwise/'
 folder = './log/'
+files = [folder + f for f in os.listdir(folder)]
+for f in files:
+    os.rename(f, f.replace('__','_'))
+# files = [f.replace('__','_') for f in files]
 # for dataset in ['fashion_mnist', 'cifar10']:
 for dataset in ['medmnist_pathmnist', 'medmnist_tissuemnist']:
 # for dataset in ['cifar10']:
 # for dataset in [ 'medmnist_octmnist']:
-    # for noniid in ['class_2','dirichlet_0.1','dirichlet_0.5','dirichlet_1']:
-    # for noniid in ['2_class','0.1_dirichlet','10_dirichlet','3_class']:
+    # client-wise
     for noniid in ['2_class','0.1_dirichlet']:
+    # cluster-wise
+    # for noniid in ['10_dirichlet','3_class']:
+        print(dataset, noniid)
     # for noniid in ['0.1','6']:
         # central
         # method = 'central'
@@ -90,7 +96,7 @@ for dataset in ['medmnist_pathmnist', 'medmnist_tissuemnist']:
         # for method in ['Local', 'Fedavg', 'Ditto',  'WCFL_3', 'WCFL_5', 'WCFL_10']:
         # for method in ['local', 'fedavg', 'fedavg_finetune', 'ditto','ditto_0.95', 'fedprox','fedprox_0.1', 'wecfl_3_', 'wecfl_5_', 'wecfl_10_', 'ifca_3_', 'ifca_5_', 'ifca_10_', 'fesem_3_', 'fesem_5_', 'fesem_10_',\
         #     'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'ifca_3_0.95', 'ifca_5_0.95', 'ifca_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
-        for method in ['fedavg', 'fedprox', 'ditto','ifca_3', 'ifca_5', 'ifca_10','fesem_3', 'fesem_5', 'fesem_10', 'wecfl_3', 'wecfl_5', 'wecfl_10', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5', 'fedprox_ensemble_10']:
+        for method in ['fedavg', 'fedprox_0.1', 'ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5', 'fedprox_ensemble_10']:
         # for method in ['fedavg', 'fedprox', 'ditto', 'ifca_10', 'fesem_10', 'wecfl_10', 'fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedavg_ensemble_5','fedprox_ensemble_5','fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedprox_ensemble_5_0.95','fedprox_ensemble_10_0.95']:
@@ -98,7 +104,7 @@ for dataset in ['medmnist_pathmnist', 'medmnist_tissuemnist']:
         # for method in ['wecfl_3', 'wecfl_5', 'wecfl_10', 'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
         # for method in ['wecfl_5_0.95']:
         # for method in ['fedavg', 'ditto', 'local', 'cfl']:
-            file_list = glob.glob(folder+ method + '_' +dataset+'*'+ noniid +'*')
+            file_list = glob.glob(folder + method + '_' +dataset+'*'+ noniid +'*')
             if len(file_list)>0:
                 acc= []
                 for i in file_list:

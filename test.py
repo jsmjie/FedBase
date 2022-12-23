@@ -31,18 +31,22 @@ def main0(seeds, dataset_splited, model):
 def main1(seeds, dataset_splited, model):
     np.random.seed(seeds)
     fedavg.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
-    fedavg_finetune.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10, device = device)
-    local.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
-    ditto.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    # fedavg_finetune.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 10, device = device)
+    # local.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    # ditto.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
     fedprox.run(dataset_splited, batch_size, num_nodes, model,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.1, device = device)
 
 @unpack_args
 def main2(seeds, dataset_splited, model, K):
     np.random.seed(seeds)
+    fedavg_ensemble.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, K, device = device)
+    fedprox_ensemble.run(dataset_splited, batch_size, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, K, device = device)
     # wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
-    wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
-    ifca.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
-    fesem.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    # fesem.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    # ifca.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, device = device)
+    # wecfl.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    # fesem.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
+    # ifca.run(dataset_splited, batch_size, K, num_nodes, model, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 0.95, device = device)
     
 # multiprocessing
 if __name__ == '__main__':
@@ -72,17 +76,16 @@ if __name__ == '__main__':
     # fedavg.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10)
     # fedavg_ensemble.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16,10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 2, 10, 3)
     # wecfl.run(data_process('medmnist_pathmnist').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNPath, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
-    wecfl.run(data_process('medmnist_tissuemnist').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNTissue, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
+    # wecfl.run(data_process('medmnist_tissuemnist').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNTissue, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('fashion_mnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('medmnist_octmnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet', plot_show= True), batch_size, 10, num_nodes, oct_net, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    print(a)
-    multi_processes = 1
-    seeds = 1
+    # print(a)
+    multi_processes = 4
+    seeds = 4
     # Run
-    # main1((1,0.5,'dirichlet',3))
     start = time.perf_counter()
     mp.set_start_method('spawn')
     with mp.Pool(multi_processes) as p:
