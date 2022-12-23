@@ -83,8 +83,8 @@ if __name__ == '__main__':
     # ifca.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # ifca.run(data_process('medmnist_octmnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet', plot_show= True), batch_size, 10, num_nodes, oct_net, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # print(a)
-    multi_processes = 4
-    seeds = 4
+    multi_processes = 2
+    seeds = 1
     # Run
     start = time.perf_counter()
     mp.set_start_method('spawn')

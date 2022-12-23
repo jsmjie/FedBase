@@ -59,7 +59,7 @@ class node():
                     continue
                 train_single_step_func(inputs, labels)
             self.step = (local_steps-len(self.train)+self.step)%len(self.train)
-        # torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
     def train_single_step(self, inputs, labels):
         inputs = inputs.to(self.device)
@@ -67,7 +67,7 @@ class node():
         labels = labels.to(self.device, dtype = torch.long)
         # print(labels)
         # zero the parameter gradients
-        self.model.zero_grad()
+        self.model.zero_grad(set_to_none=True)
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
@@ -89,7 +89,7 @@ class node():
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
-        self.model.zero_grad()
+        self.model.zero_grad(set_to_none=True)
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
@@ -112,7 +112,7 @@ class node():
                 labels = torch.flatten(labels)
                 labels = labels.to(self.device, dtype = torch.long)
                 # zero the parameter gradients
-                self.model.zero_grad()
+                self.model.zero_grad(set_to_none=True)
                 # forward + backward + optimize
                 outputs = self.model(inputs)
                 # optim
