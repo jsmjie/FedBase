@@ -20,7 +20,7 @@ class server_class():
         try:
             self.model = torch.compile(self.model)
         except:
-            pass
+            print('not eligible for 2.0')
 
     def aggregate(self, nodes, idlist, weight_type='data_size'):
         aggregated_weights = self.model.state_dict()
