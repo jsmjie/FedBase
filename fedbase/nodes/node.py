@@ -30,7 +30,7 @@ class node():
         try:
             self.model = torch.compile(self.model)
         except:
-            print('not eligible for 2.0')
+            pass
 
     def assign_objective(self, objective):
         self.objective = objective

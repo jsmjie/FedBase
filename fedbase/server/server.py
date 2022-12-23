@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from pandas.plotting import parallel_coordinates
+import traceback
 
 class server_class():
     def __init__(self, device):
@@ -20,6 +21,7 @@ class server_class():
         try:
             self.model = torch.compile(self.model)
         except:
+            print(traceback.format_exc())
             print('not eligible for 2.0')
 
     def aggregate(self, nodes, idlist, weight_type='data_size'):
