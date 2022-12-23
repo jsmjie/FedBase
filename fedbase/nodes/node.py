@@ -27,7 +27,11 @@ class node():
     def assign_model(self, model):
         self.model = model
         self.model.to(self.device)
-
+        try:
+            self.model = torch.compile(self.model)
+        except:
+            pass
+        
     def assign_objective(self, objective):
         self.objective = objective
 

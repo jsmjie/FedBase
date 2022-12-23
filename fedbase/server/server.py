@@ -17,6 +17,10 @@ class server_class():
     def assign_model(self, model):
         self.model = model
         self.model.to(self.device)
+        try:
+            self.model = torch.compile(self.model)
+        except:
+            pass
 
     def aggregate(self, nodes, idlist, weight_type='data_size'):
         aggregated_weights = self.model.state_dict()
