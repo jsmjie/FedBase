@@ -19,7 +19,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
     nodes = [node(i, device) for i in range(num_nodes)]
     # local_models = [model() for i in range(num_nodes)]
-    local_loss = [objective() for i in range(num_nodes)]
+    # local_loss = [objective() for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data
@@ -29,9 +29,11 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # model
         # nodes[i].assign_model(local_models[i])
         # objective
-        nodes[i].assign_objective(local_loss[i])
+        nodes[i].assign_objective(objective())
         # optim
         # nodes[i].assign_optim(optimizer(model().parameters()))
+    
+    del train_splited, test_splited
 
     # initialize parameters to nodes
     # server.distribute(nodes, list(range(num_nodes)))

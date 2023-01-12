@@ -18,18 +18,18 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         server.assign_model(model())
 
         nodes = [node(i, device) for i in range(num_nodes)]
-        local_models = [model() for i in range(num_nodes)]
-        local_loss = [objective() for i in range(num_nodes)]
+        # local_models = [model() for i in range(num_nodes)]
+        # local_loss = [objective() for i in range(num_nodes)]
 
         for i in range(num_nodes):
             # data
             # print(len(train_splited[i]), len(test_splited[i]))
             nodes[i].assign_train(DataLoader(train_splited[i], batch_size=batch_size, shuffle=True))
-            nodes[i].assign_test(DataLoader(test_splited[i],batch_size=batch_size, shuffle=False))
+            nodes[i].assign_test(DataLoader(test_splited[i], batch_size=batch_size, shuffle=False))
             # model
-            nodes[i].assign_model(local_models[i])
+            nodes[i].assign_model(model())
             # objective
-            nodes[i].assign_objective(local_loss[i])
+            nodes[i].assign_objective(objective())
             # optim
             nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
 
