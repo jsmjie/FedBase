@@ -2,6 +2,7 @@ from fedbase.utils.data_loader import data_process, log
 from fedbase.utils.visualize import dimension_reduction
 from fedbase.nodes.node import node
 from fedbase.server.server import server_class
+from fedbase.baselines import local
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
@@ -12,12 +13,15 @@ import inspect
 from functools import partial
 import numpy as np
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
-    # dt = data_process(dataset)
-    # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     train_splited, test_splited, split_para = dataset_splited
+    # warmup
+    local_models_warmup = local.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device = device)
+
+    # initialize
     server = server_class(device)
     server.assign_model(model())
+    server.model_g = model()
 
     nodes = [node(i, device) for i in range(num_nodes)]
     # local_models = [model() for i in range(num_nodes)]
@@ -29,54 +33,51 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         nodes[i].assign_train(DataLoader(train_splited[i], batch_size=batch_size, shuffle=True))
         nodes[i].assign_test(DataLoader(test_splited[i], batch_size=batch_size, shuffle=False))
         # model
-        nodes[i].assign_model(model())
+        nodes[i].assign_model(local_models_warmup[i])
+        nodes[i].model_g = model()
+        nodes[i].model_g.to(device)
         # objective
         nodes[i].assign_objective(objective())
         # optim
-        nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
+        nodes[i].assign_optim({'local': optimizer(nodes[i].model.parameters()),\
+                'global': optimizer(nodes[i].model_g.parameters()),\
+                    'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_g.parameters()))})
     
     del train_splited, test_splited
 
-    # initialize parameters to nodes
-    server.distribute(nodes, list(range(num_nodes)))
+    # initialize K cluster model
+    cluster_models = [model() for i in range(K)]
+
+    # initialize clustering and distribute
+    server.weighted_clustering(nodes, list(range(num_nodes)), K)
+    for i in range(K):
+        server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+        server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+        cluster_models[i].load_state_dict(server.model.state_dict())
 
     # train!
-    b_list = []
-    uu_list =[]
-    for i in range(global_rounds):
+    for i in range(global_rounds - warmup_rounds):
         print('-------------------Global round %d start-------------------' % (i))
         # local update
         for j in range(num_nodes):
-            if not reg:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
-            else:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
+                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
+                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)
 
-        # # tsne or pca plot
-        # # if i == global_rounds-1:
-        # if i == i :
-        #     cluster_data = torch.nn.utils.parameters_to_vector(nodes[0].model.parameters()).cpu().detach().numpy()[-1000:]
-        #     for i in range(1, num_nodes):
-        #         cluster_data = np.concatenate((cluster_data, torch.nn.utils.parameters_to_vector(nodes[i].model.parameters()).cpu().detach().numpy()[-1000:]), axis = 0)
-        #     cluster_data = np.reshape(cluster_data, (num_nodes,int(len(cluster_data)/num_nodes)))
-        #     cluster_label = server.clustering['label'][-1]
-        #     # cluster_label = np.repeat(range(10),20)
-        #     dimension_reduction(cluster_data, cluster_label, method= 'tsne')
-        # plot B
-        # print(server.calculate_B(nodes, range(20)))
-        # B_list, u_list = server.calculate_B(nodes, range(20))
-        # b_list.append(max(B_list))
-        # uu_list.append(max(u_list))
-        # print(b_list, uu_list)
-        for k in range(num_nodes):
-            nodes[k].grads = []
-        # print(a)
         # server aggregation and distribution by cluster
-        for i in range(K):
-            server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
-            server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+        for k in range(K):
+            server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==k])
+            server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==k])
+            cluster_models[k].load_state_dict(server.model.state_dict())
+        
+        # aggregate model_g
+        server.aggregate_model_g(nodes, list(range(num_nodes)))
+        server.distribute_model_g(nodes, list(range(num_nodes)))
+        
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()
@@ -87,4 +88,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         log(os.path.basename(__file__)[:-3] + '_' + str(K)  + '_' + split_para, nodes, server)
     else:
         log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
+
+    return cluster_models
     

@@ -34,7 +34,6 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     
     del train_splited, test_splited
 
-
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))
 
@@ -51,4 +50,4 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     # log
     log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
 
-    return [node[i].model for i in range(num_nodes)]
+    return [nodes[i].model for i in range(num_nodes)]

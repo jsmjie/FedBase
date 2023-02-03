@@ -13,11 +13,11 @@ from functools import partial
 import copy
 
 def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    train_splited, test_splited, split_para = dataset_splited
     # warm up
-    model_g = fedavg.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device)
+    model_g = fedavg.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device, log_file = False)
 
     # initialize
-    train_splited, test_splited, split_para = dataset_splited
     server = server_class(device)
     server.assign_model(model())
     server.model_g = copy.deepcopy(model_g)
