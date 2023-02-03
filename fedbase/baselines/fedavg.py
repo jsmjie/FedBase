@@ -52,3 +52,5 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
 
     # log
     log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+
+    return server.model

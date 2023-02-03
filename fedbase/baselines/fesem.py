@@ -38,6 +38,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # initialize parameters to nodes
     server.distribute(nodes, list(range(num_nodes)))
 
+    # initialize K cluster model
+    cluster_models = [model() for i in range(K)]
+
     # train!
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
@@ -53,6 +56,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         for i in range(K):
             server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
             server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
+            cluster_models[k].load_state_dict(server.model.state_dict())
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()
@@ -63,3 +67,5 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
     else:
         log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + split_para, nodes, server)
+
+    return cluster_models

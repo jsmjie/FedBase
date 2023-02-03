@@ -38,6 +38,21 @@ class server_class():
                 aggregated_weights[j] += nodes[i].model.state_dict()[j]*weight
         self.model.load_state_dict(aggregated_weights)
         return self.model
+
+    def aggregate_model_g(self, nodes, idlist, weight_type='data_size'):
+        aggregated_weights = self.model_g.state_dict()
+        for j in aggregated_weights.keys():
+            aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(self.device)
+        sum_size = sum([nodes[i].data_size for i in idlist])
+        for i in idlist:
+            if weight_type == 'equal':
+                weight = 1/len(idlist)
+            elif weight_type == 'data_size':
+                weight = nodes[i].data_size/sum_size
+            for j in nodes[i].model_g.state_dict().keys():
+                aggregated_weights[j] += nodes[i].model_g.state_dict()[j]*weight
+        self.model_g.load_state_dict(aggregated_weights)
+        return self.model_g
     
     def acc(self, nodes, idlist, weight_type='data_size'):
         global_test_metrics = [0]*2
@@ -55,6 +70,10 @@ class server_class():
     def distribute(self, nodes, idlist):
         for i in idlist:
             nodes[i].model.load_state_dict(self.model.state_dict())
+    
+    def distribute_model_g(self, nodes, idlist):
+        for i in idlist:
+            nodes[i].model_g.load_state_dict(self.model_g.state_dict())
 
     def client_sampling(self, frac, distribution):
         pass

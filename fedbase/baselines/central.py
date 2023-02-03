@@ -28,3 +28,5 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
 
     # log
     log(os.path.basename(__file__)[:-3]+ '_' + str(dt.dataset_name), [nodes0], server={})
+
+    return nodes0.model

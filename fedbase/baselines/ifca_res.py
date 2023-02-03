@@ -1,6 +1,7 @@
 from fedbase.utils.data_loader import data_process, log
 from fedbase.nodes.node import node
 from fedbase.server.server import server_class
+from fedbase.baselines import fedavg
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
@@ -9,40 +10,36 @@ import os
 import sys
 import inspect
 from functools import partial
+import copy
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
-    # dt = data_process(dataset)
-    # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    # warm up
+    model_g = fedavg.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device)
+
+    # initialize
     train_splited, test_splited, split_para = dataset_splited
     server = server_class(device)
     server.assign_model(model())
+    server.model_g = copy.deepcopy(model_g)
 
     nodes = [node(i, device) for i in range(num_nodes)]
-    # local_models = [model() for i in range(num_nodes)]
-    # local_loss = [objective() for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data
         # print(len(train_splited[i]), len(test_splited[i]))
         nodes[i].assign_train(DataLoader(train_splited[i], batch_size=batch_size, shuffle=True))
         nodes[i].assign_test(DataLoader(test_splited[i], batch_size=batch_size, shuffle=False))
-        # model
-        # nodes[i].assign_model(local_models[i])
         # objective
         nodes[i].assign_objective(objective())
-        # optim
-        # nodes[i].assign_optim(optimizer(model().parameters()))
-    
-    del train_splited, test_splited
+        nodes[i].model_g = copy.deepcopy(model_g)
 
-    # initialize parameters to nodes
-    # server.distribute(nodes, list(range(num_nodes)))
+    del train_splited, test_splited
 
     # initialize K cluster model
     cluster_models = [model() for i in range(K)]
 
     # train!
-    for i in range(global_rounds):
+    for i in range(global_rounds - warmup_rounds):
         print('-------------------Global round %d start-------------------' % (i))
         # assign client to cluster
         assignment = [[] for _ in range(K)]
@@ -54,24 +51,34 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                     m = k
             assignment[m].append(i)
             nodes[i].assign_model(cluster_models[m])
-            nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
-        print(server.clustering)
+            # nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
+            nodes[i].assign_optim({'local': optimizer(nodes[i].model.parameters()),\
+                'global': optimizer(nodes[i].model_g.parameters()),\
+                    'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_g.parameters()))})
+
+        # print(server.clustering)
         server.clustering['label'].append(assignment)
         print(assignment)
+        print([len(assignment) for i in range(len(assignment))])
 
         # local update
         for j in range(num_nodes):
-            if not reg:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
-            else:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
-
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
+                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
+                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+            
         # server aggregation and distribution by cluster
         for k in range(K):
             if len(assignment[k])>0:
                 server.aggregate(nodes, assignment[k])
                 server.distribute(nodes, assignment[k])
+                # cluster_models[k] = server.model
                 cluster_models[k].load_state_dict(server.model.state_dict())
+
+        # aggregate model_g
+        server.aggregate_model_g(nodes, list(range(num_nodes)))
+        server.distribute_model_g(nodes, list(range(num_nodes)))
 
         # test accuracy
         for i in range(num_nodes):

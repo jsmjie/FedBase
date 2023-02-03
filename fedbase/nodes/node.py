@@ -19,7 +19,7 @@ class node():
 
     def assign_train(self, data):
         self.train = data
-        self.data_size = len(data)
+        self.data_size = len(data.dataset)
     
     def assign_test(self,data):
         self.test = data
@@ -103,6 +103,20 @@ class node():
         self.loss.backward()
         self.optim.step()
         # print('after', self.objective(self.model(inputs), labels))
+    
+    def train_single_step_res(self, inputs, labels, optimizer, model_1, model_2):
+        inputs = inputs.to(self.device)
+        labels = torch.flatten(labels)
+        labels = labels.to(self.device, dtype = torch.long)
+        # zero the parameter gradients
+        model_1.zero_grad(set_to_none=True)
+        model_2.zero_grad(set_to_none=True)
+        # forward + backward + optimize
+        outputs = model_1(inputs) + model_2(inputs)
+        # optim
+        self.loss = self.objective(outputs, labels)
+        self.loss.backward()        
+        optimizer.step()
 
     def local_update_epochs(self, local_epochs):
         # local_steps may be better!!
@@ -132,17 +146,15 @@ class node():
     def local_train_loss(self, model):
         model.to(self.device)
         train_loss = 0
-        for k, (inputs, labels) in enumerate(self.train):
+        for data in self.train:
+            inputs, labels = data
             inputs = inputs.to(self.device)
             labels = torch.flatten(labels)
             labels = labels.to(self.device, dtype = torch.long)
             # forward
             outputs = model(inputs)
             train_loss += self.objective(outputs, labels)
-            if k>=2:
-                break
-        # torch.cuda.empty_cache()
-        return train_loss/(k+1)
+        return train_loss/self.data_size
 
     def local_test(self):
         predict_ts = torch.empty(0).to(self.device)
