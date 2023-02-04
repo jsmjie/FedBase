@@ -92,15 +92,16 @@ for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tiss
         #         acc_df_tmp['test macro f1'] = acc_df_tmp[i].apply(lambda x: x[1])
         #         acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
         #     # print(acc_df_n)
-        #     print(method, dataset, round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2)\
-        #             , round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2))
+        #     print(method, dataset, round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2)\
+        #             , round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2))
         #     sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
         # others
         # for method in ['Local', 'Fedavg', 'Ditto',  'WCFL_3', 'WCFL_5', 'WCFL_10']:
         # for method in ['local', 'fedavg', 'fedavg_finetune', 'ditto','ditto_0.95', 'fedprox','fedprox_0.1', 'wecfl_3_', 'wecfl_5_', 'wecfl_10_', 'ifca_3_', 'ifca_5_', 'ifca_10_', 'fesem_3_', 'fesem_5_', 'fesem_10_',\
         #     'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'ifca_3_0.95', 'ifca_5_0.95', 'ifca_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
         # for method in ['fedavg', 'fedprox_0.1', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5_0.1', 'fedprox_ensemble_10_0.1', 'ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10']:
-        for method in [i+j for i in ['ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10'] for j in ['','_1','_0.1','_0.01','_0.001']]:
+        # for method in [i+j for i in ['ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10'] for j in ['','_1','_0.1','_0.01','_0.001']]:
+        for method in ['ifca_res_5','wecfl_res_5', 'ifca_res_10','wecfl_res_10']:
         # for method in ['fedavg', 'fedprox', 'ditto', 'ifca_10', 'fesem_10', 'wecfl_10', 'fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedavg_ensemble_5','fedprox_ensemble_5','fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedprox_ensemble_5_0.95','fedprox_ensemble_10_0.95']:
@@ -133,8 +134,8 @@ for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tiss
                     # acc_df_tmp = acc_df_tmp.rename(columns={i : 'test acc'})
                     acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
                 # print(acc_df_n)
-                print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test acc'])*100,2))\
-                    ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=98]['test macro f1'])*100,2)))
+                print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2))\
+                    ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2)))
                 # acc_df_n.to_csv('./vis/nips2022/' + method + '_'+ noniid + dataset +'.csv')
                 # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
                 # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = method)

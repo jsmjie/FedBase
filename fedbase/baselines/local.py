@@ -8,7 +8,7 @@ import os
 from functools import partial
 
 
-def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, global_rounds, local_steps, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'), log_file=True):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -48,6 +48,7 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         server.acc(nodes, list(range(num_nodes)))
 
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
+    if log_file:
+        log(os.path.basename(__file__)[:-3] + '_' + split_para, nodes, server)
 
     return [nodes[i].model for i in range(num_nodes)]

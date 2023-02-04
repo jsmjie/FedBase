@@ -59,14 +59,14 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # print(server.clustering)
         server.clustering['label'].append(assignment)
         print(assignment)
-        print([len(assignment) for i in range(len(assignment))])
+        print([len(i) for i in range(len(assignment))])
 
         # local update
         for j in range(num_nodes):
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
-                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+                model_opt = nodes[j].model, model_fix = nodes[j].model_g))
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
             
         # server aggregation and distribution by cluster
         for k in range(K):

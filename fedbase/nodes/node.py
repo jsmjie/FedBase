@@ -104,15 +104,15 @@ class node():
         self.optim.step()
         # print('after', self.objective(self.model(inputs), labels))
     
-    def train_single_step_res(self, inputs, labels, optimizer, model_1, model_2):
+    def train_single_step_res(self, inputs, labels, optimizer, model_opt, model_fix):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
-        model_1.zero_grad(set_to_none=True)
-        model_2.zero_grad(set_to_none=True)
+        model_opt.zero_grad(set_to_none=True)
+        # model_2.zero_grad(set_to_none=True)
         # forward + backward + optimize
-        outputs = model_1(inputs) + model_2(inputs)
+        outputs = model_opt(inputs) + model_fix(inputs)
         # optim
         self.loss = self.objective(outputs, labels)
         self.loss.backward()        

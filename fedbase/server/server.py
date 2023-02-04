@@ -113,6 +113,7 @@ class server_class():
         kmeans = KMeans(n_clusters=K).fit(np.asarray(X), sample_weight= weight)
         labels = kmeans.labels_
         print(labels)
+        print([list(labels).count(i) for i in range(K)])
         for i in idlist:
             nodes[i].label = labels[i]
         self.clustering['label'].append(list(labels.astype(int)))

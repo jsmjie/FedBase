@@ -16,7 +16,7 @@ import numpy as np
 def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     train_splited, test_splited, split_para = dataset_splited
     # warmup
-    local_models_warmup = local.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device = device)
+    local_models_warmup = local.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device = device, log_file=False)
 
     # initialize
     server = server_class(device)
@@ -49,7 +49,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     cluster_models = [model() for i in range(K)]
 
     # initialize clustering and distribute
-    server.weighted_clustering(nodes, list(range(num_nodes)), K)
+    server.weighted_clu.stering(nodes, list(range(num_nodes)), K)
     for i in range(K):
         server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
         server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
@@ -61,10 +61,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # local update
         for j in range(num_nodes):
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
+                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
-                model_1 = nodes[j].model, model_2 = nodes[j].model_g))
-
+                model_opt = nodes[j].model, model_fix = nodes[j].model_g))
+            
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)
 
