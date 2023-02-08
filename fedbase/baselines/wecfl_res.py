@@ -24,8 +24,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     server.model_g = model()
 
     nodes = [node(i, device) for i in range(num_nodes)]
-    # local_models = [model() for i in range(num_nodes)]
-    # local_loss = [objective() for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data

@@ -24,7 +24,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # print(server.model_g.state_dict()['fc.bias'])
     print(len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True)), len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True).dataset))
 
-    # nodes = [node(i, device) for i in range(num_nodes)]
+    nodes = [node(i, device) for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data
