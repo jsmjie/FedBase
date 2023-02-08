@@ -10,7 +10,7 @@ import os
 import sys
 import inspect
 from functools import partial
-import copy
+from copy import deepcopy
 
 def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     train_splited, test_splited, split_para = dataset_splited
@@ -20,9 +20,11 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # initialize
     server = server_class(device)
     server.assign_model(model())
-    server.model_g = copy.deepcopy(model_g)
+    server.model_g = deepcopy(model_g)
+    # print(server.model_g.state_dict()['fc.bias'])
+    print(len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True)), len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True).dataset))
 
-    nodes = [node(i, device) for i in range(num_nodes)]
+    # nodes = [node(i, device) for i in range(num_nodes)]
 
     for i in range(num_nodes):
         # data
@@ -31,7 +33,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         nodes[i].assign_test(DataLoader(test_splited[i], batch_size=batch_size, shuffle=False))
         # objective
         nodes[i].assign_objective(objective())
-        nodes[i].model_g = copy.deepcopy(model_g)
+        nodes[i].model_g = deepcopy(model_g)
 
     del train_splited, test_splited
 
@@ -51,7 +53,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                     m = k
             assignment[m].append(i)
             nodes[i].assign_model(cluster_models[m])
-            # nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
             nodes[i].assign_optim({'local': optimizer(nodes[i].model.parameters()),\
                 'global': optimizer(nodes[i].model_g.parameters()),\
                     'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_g.parameters()))})
@@ -59,7 +60,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # print(server.clustering)
         server.clustering['label'].append(assignment)
         print(assignment)
-        print([len(i) for i in range(len(assignment))])
+        print([len(assignment[i]) for i in range(len(assignment))])
 
         # local update
         for j in range(num_nodes):
@@ -73,12 +74,16 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             if len(assignment[k])>0:
                 server.aggregate(nodes, assignment[k])
                 server.distribute(nodes, assignment[k])
-                # cluster_models[k] = server.model
                 cluster_models[k].load_state_dict(server.model.state_dict())
 
         # aggregate model_g
         server.aggregate_model_g(nodes, list(range(num_nodes)))
         server.distribute_model_g(nodes, list(range(num_nodes)))
+
+        # print(nodes[0].model.state_dict()['fc.bias'])
+        # print(nodes[0].model_g.state_dict()['fc.bias'])
+        # print(nodes[1].model.state_dict()['fc.bias'])
+        # print(nodes[1].model_g.state_dict()['fc.bias'])
 
         # test accuracy
         for i in range(num_nodes):

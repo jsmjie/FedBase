@@ -7,6 +7,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from fedbase.utils.utils import unpack_args
 from functools import partial
 from statistics import mode
+import torch.nn.functional as F
 
 class node():
     def __init__(self, id, device):
@@ -25,7 +26,11 @@ class node():
         self.test = data
 
     def assign_model(self, model):
-        self.model = model
+        try:
+            self.model.load_state_dict(model.state_dict())
+        except:
+            self.model = model
+        # self.model = deepcopy(model)
         self.model.to(self.device)
         try:
             self.model = torch.compile(self.model)
@@ -71,7 +76,7 @@ class node():
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
-        self.loss = self.objective(outputs, labels)
+        self.loss = self.objective(outputs, F.one_hot(labels, outputs.shape[1]).float())
         self.loss.backward()
 
         # calculate accumulate gradients
@@ -109,13 +114,22 @@ class node():
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
-        model_opt.zero_grad(set_to_none=True)
+        # model_opt.zero_grad(set_to_none=True)
+        # model_opt.zero_grad()
+        optimizer.zero_grad()
         # model_2.zero_grad(set_to_none=True)
         # forward + backward + optimize
+        # m = torch.nn.LogSoftmax(dim=1)
+        # ls = torch.nn.NLLLoss()
+        # outputs = (m(model_opt(inputs)) + m(model_fix(inputs)))/2
+        # loss = ls(outputs, labels)
+
         outputs = model_opt(inputs) + model_fix(inputs)
-        # optim
-        self.loss = self.objective(outputs, labels)
-        self.loss.backward()        
+        loss = self.objective(outputs, labels)
+        # # optim
+        # outputs = torch.norm(model_opt(inputs) - model_fix(inputs), p = 2)
+        # self.loss = outputs
+        loss.backward()        
         optimizer.step()
 
     def local_update_epochs(self, local_epochs):
@@ -154,7 +168,8 @@ class node():
             # forward
             outputs = model(inputs)
             train_loss += self.objective(outputs, labels)
-        return train_loss/self.data_size
+        # return train_loss/len(self.train)
+        return train_loss
 
     def local_test(self):
         predict_ts = torch.empty(0).to(self.device)

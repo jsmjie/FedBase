@@ -16,7 +16,11 @@ class server_class():
         self.clustering = {'label':[], 'raw':[], 'center':[]}
 
     def assign_model(self, model):
-        self.model = model
+        try:
+            self.model.load_state_dict(model.state_dict())
+        except:
+            self.model = model
+        # self.model = deepcopy(model)
         self.model.to(self.device)
         try:
             self.model = torch.compile(self.model)
