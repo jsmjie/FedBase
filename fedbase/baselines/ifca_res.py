@@ -21,8 +21,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     server = server_class(device)
     server.assign_model(model())
     server.model_g = deepcopy(model_g)
-    # print(server.model_g.state_dict()['fc.bias'])
-    print(len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True)), len(DataLoader(train_splited[0], batch_size=batch_size, shuffle=True).dataset))
 
     nodes = [node(i, device) for i in range(num_nodes)]
 
@@ -48,8 +46,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         for i in range(num_nodes):
             m = 0
             for k in range(1, K):
-                # print(nodes[i].local_train_loss(cluster_models[m]), nodes[i].local_train_loss(cluster_models[k]))
-                if nodes[i].local_train_loss(cluster_models[m])>=nodes[i].local_train_loss(cluster_models[k]):
+                # if i <=5:
+                #     print(nodes[i].local_train_acc(cluster_models[m]), nodes[i].local_train_acc(cluster_models[k]))
+                # if nodes[i].local_train_loss(cluster_models[m])>=nodes[i].local_train_loss(cluster_models[k]):
+                if nodes[i].local_train_acc(cluster_models[m])<=nodes[i].local_train_acc(cluster_models[k]):
                     m = k
             assignment[m].append(i)
             nodes[i].assign_model(cluster_models[m])
@@ -79,11 +79,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # aggregate model_g
         server.aggregate_model_g(nodes, list(range(num_nodes)))
         server.distribute_model_g(nodes, list(range(num_nodes)))
-
-        # print(nodes[0].model.state_dict()['fc.bias'])
-        # print(nodes[0].model_g.state_dict()['fc.bias'])
-        # print(nodes[1].model.state_dict()['fc.bias'])
-        # print(nodes[1].model_g.state_dict()['fc.bias'])
 
         # test accuracy
         for i in range(num_nodes):

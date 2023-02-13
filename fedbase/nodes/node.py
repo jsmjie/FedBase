@@ -32,10 +32,10 @@ class node():
             self.model = model
         # self.model = deepcopy(model)
         self.model.to(self.device)
-        try:
-            self.model = torch.compile(self.model)
-        except:
-            pass
+        # try:
+        #     self.model = torch.compile(self.model)
+        # except:
+        #     pass
 
     def assign_objective(self, objective):
         self.objective = objective
@@ -64,7 +64,15 @@ class node():
                     continue
                 train_single_step_func(inputs, labels)
             self.step = (local_steps-len(self.train)+self.step)%len(self.train)
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
+
+    def local_update_epochs(self, local_epochs, train_single_step_func):
+        # local_steps may be better!!
+        running_loss = 0
+        for j in range(local_epochs):
+            for k, (inputs, labels) in enumerate(self.train):
+                train_single_step_func(inputs, labels)
+        # torch.cuda.empty_cache()
 
     def train_single_step(self, inputs, labels):
         inputs = inputs.to(self.device)
@@ -119,57 +127,69 @@ class node():
         optimizer.zero_grad()
         # model_2.zero_grad(set_to_none=True)
         # forward + backward + optimize
+        # loss 1
         # m = torch.nn.LogSoftmax(dim=1)
         # ls = torch.nn.NLLLoss()
         # outputs = (m(model_opt(inputs)) + m(model_fix(inputs)))/2
         # loss = ls(outputs, labels)
 
-        outputs = model_opt(inputs) + model_fix(inputs)
-        loss = self.objective(outputs, labels)
+        # loss 2
+        # outputs = model_opt(inputs) + model_fix(inputs)
+        # loss = self.objective(outputs, labels)
+
+        # loss 3
+        reg = 0
+        for p,q in zip(model_opt.parameters(), model_fix.parameters()):
+            reg += torch.square(torch.norm((p-q),2))
+        # print(reg)
+        outputs = model_opt(inputs)
+        loss = self.objective(outputs, labels) + 0.001*reg
         # # optim
         # outputs = torch.norm(model_opt(inputs) - model_fix(inputs), p = 2)
         # self.loss = outputs
         loss.backward()        
         optimizer.step()
 
-    def local_update_epochs(self, local_epochs):
-        # local_steps may be better!!
-        running_loss = 0
-        for j in range(local_epochs):
-            for k, (inputs, labels) in enumerate(self.train):
-                inputs = inputs.to(self.device)
-                labels = torch.flatten(labels)
-                labels = labels.to(self.device, dtype = torch.long)
-                # zero the parameter gradients
-                self.model.zero_grad(set_to_none=True)
-                # forward + backward + optimize
-                outputs = self.model(inputs)
-                # optim
-                self.loss = self.objective(outputs, labels)
-                self.loss.backward()
-                self.optim.step()
-                # print
-                running_loss += self.loss.item()
-                if (k+1) % 100 == 0:    # print every 100 mini-batches
-                    print('[%d %d] node_%d loss: %.3f' %
-                          (j, k+1, self.id, running_loss/20))
-                    running_loss = 0
-        # torch.cuda.empty_cache()
-
     # for IFCA
     def local_train_loss(self, model):
         model.to(self.device)
         train_loss = 0
-        for data in self.train:
-            inputs, labels = data
-            inputs = inputs.to(self.device)
-            labels = torch.flatten(labels)
-            labels = labels.to(self.device, dtype = torch.long)
-            # forward
-            outputs = model(inputs)
-            train_loss += self.objective(outputs, labels)
+        i = 0
+        with torch.no_grad():
+            for data in self.train:
+                inputs, labels = data
+                inputs = inputs.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
+                # forward
+                outputs = model(inputs)
+                train_loss += self.objective(outputs, labels)
+                i+=1
+                if i>=10:
+                    break
         # return train_loss/len(self.train)
-        return train_loss
+        return train_loss/i
+    
+    def local_train_acc(self, model):
+        model.to(self.device)
+        predict_ts = torch.empty(0).to(self.device)
+        label_ts = torch.empty(0).to(self.device)
+        i = 0
+        with torch.no_grad():
+            for data in self.train:
+                inputs, labels = data
+                inputs = inputs.to(self.device)
+                labels = torch.flatten(labels)
+                labels = labels.to(self.device, dtype = torch.long)
+                outputs = model(inputs)
+                _, predicted = torch.max(outputs.data, 1)
+                predict_ts = torch.cat([predict_ts, predicted], 0)
+                label_ts = torch.cat([label_ts, labels], 0)
+                i+=1
+                if i>=10:
+                    break
+        acc = accuracy_score(label_ts.cpu(), predict_ts.cpu())
+        return acc
 
     def local_test(self):
         predict_ts = torch.empty(0).to(self.device)

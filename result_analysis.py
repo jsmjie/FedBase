@@ -52,7 +52,7 @@ def plt_maximize():
 # print(a)
 
 # folder = './log/log_groupwise/'
-folder = './log/'
+folder = './log/res_230208/'
 files = [folder + f for f in os.listdir(folder)]
 for f in files:
     try:
@@ -133,11 +133,17 @@ for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tiss
                     # print(acc_df_tmp)
                     # acc_df_tmp = acc_df_tmp.rename(columns={i : 'test acc'})
                     acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
-                # print(acc_df_n)
+                acc_df_n = acc_df_n.reset_index(drop=True)
                 print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2))\
                     ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2)))
                 # acc_df_n.to_csv('./vis/nips2022/' + method + '_'+ noniid + dataset +'.csv')
-                # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test acc"], label = method)
+                list_round, list_acc = [],[]
+                for i in acc_df.columns:
+                    list_round.append(i)
+                    list_acc.append(acc_df.loc[0,i][0])
+                print(list_round, list_acc)
+                sns.lineplot(x=list_round, y=list_acc, label = method)
+                # plt.show()
                 # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = method)
 
         sns.set_theme(style="darkgrid")

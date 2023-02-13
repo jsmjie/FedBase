@@ -47,7 +47,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     cluster_models = [model() for i in range(K)]
 
     # initialize clustering and distribute
-    server.weighted_clu.stering(nodes, list(range(num_nodes)), K)
+    server.weighted_clustering(nodes, list(range(num_nodes)), K)
     for i in range(K):
         server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
         server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])

@@ -22,11 +22,11 @@ class server_class():
             self.model = model
         # self.model = deepcopy(model)
         self.model.to(self.device)
-        try:
-            self.model = torch.compile(self.model)
-        except:
-            print(traceback.format_exc())
-            print('not eligible for 2.0')
+        # try:
+        #     self.model = torch.compile(self.model)
+        # except:
+        #     print(traceback.format_exc())
+        #     print('not eligible for 2.0')
 
     def aggregate(self, nodes, idlist, weight_type='data_size'):
         aggregated_weights = self.model.state_dict()
