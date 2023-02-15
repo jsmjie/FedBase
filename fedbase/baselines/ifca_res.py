@@ -63,19 +63,25 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         print([len(assignment[i]) for i in range(len(assignment))])
 
         # local update
+        # for j in range(num_nodes):
+        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
+        #         model_opt = nodes[j].model, model_fix = nodes[j].model_g))
+        
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['all'], \
                 model_opt = nodes[j].model, model_fix = nodes[j].model_g))
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
-            
+
         # server aggregation and distribution by cluster
         for k in range(K):
             if len(assignment[k])>0:
                 server.aggregate(nodes, assignment[k])
                 server.distribute(nodes, assignment[k])
                 cluster_models[k].load_state_dict(server.model.state_dict())
-
+        
+        # for j in range(num_nodes):
+        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
+        #         model_opt = nodes[j].model_g, model_fix = cluster_models[[l for l in range(K) if j in assignment[l]][0]]))
+            
         # aggregate model_g
         server.aggregate_model_g(nodes, list(range(num_nodes)))
         server.distribute_model_g(nodes, list(range(num_nodes)))

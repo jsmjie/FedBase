@@ -134,16 +134,16 @@ class node():
         # loss = ls(outputs, labels)
 
         # loss 2
-        # outputs = model_opt(inputs) + model_fix(inputs)
-        # loss = self.objective(outputs, labels)
+        outputs = model_opt(inputs) + model_fix(inputs)
+        loss = self.objective(outputs, labels)
 
         # loss 3
-        reg = 0
-        for p,q in zip(model_opt.parameters(), model_fix.parameters()):
-            reg += torch.square(torch.norm((p-q),2))
-        # print(reg)
-        outputs = model_opt(inputs)
-        loss = self.objective(outputs, labels) + 0.001*reg
+        # reg = 0
+        # for p,q in zip(model_opt.parameters(), model_fix.parameters()):
+        #     reg += torch.square(torch.norm((p-q),2))
+        # # print(reg)
+        # outputs = model_opt(inputs)
+        # loss = self.objective(outputs, labels) + 0.001*reg
         # # optim
         # outputs = torch.norm(model_opt(inputs) - model_fix(inputs), p = 2)
         # self.loss = outputs
