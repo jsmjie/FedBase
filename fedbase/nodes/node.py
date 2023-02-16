@@ -123,8 +123,9 @@ class node():
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
         # model_opt.zero_grad(set_to_none=True)
-        # model_opt.zero_grad()
-        optimizer.zero_grad()
+        model_opt.zero_grad(set_to_none=True)
+        model_fix.zero_grad(set_to_none=True)
+        # optimizer.zero_grad()
         # model_2.zero_grad(set_to_none=True)
         # forward + backward + optimize
         # loss 1
@@ -138,7 +139,7 @@ class node():
         for p,q in zip(model_opt.parameters(), model_fix.parameters()):
             reg += torch.norm((p-q),2)
 
-        outputs = model_opt(inputs) + model_fix(inputs) + 0.01 * reg
+        outputs = model_opt(inputs) + model_fix(inputs) + 0.005 * reg
         loss = self.objective(outputs, labels)
 
         # loss 3
