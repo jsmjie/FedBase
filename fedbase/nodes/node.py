@@ -134,7 +134,11 @@ class node():
         # loss = ls(outputs, labels)
 
         # loss 2
-        outputs = model_opt(inputs) + model_fix(inputs)
+        reg = 0
+        for p,q in zip(model_opt.parameters(), model_fix.parameters()):
+            reg += torch.norm((p-q),2)
+
+        outputs = model_opt(inputs) + model_fix(inputs) + 0.01 * reg
         loss = self.objective(outputs, labels)
 
         # loss 3
