@@ -29,8 +29,7 @@ class node():
         try:
             self.model.load_state_dict(model.state_dict())
         except:
-            self.model = model
-        # self.model = deepcopy(model)
+            self.model = deepcopy(model)
         self.model.to(self.device)
         # try:
         #     self.model = torch.compile(self.model)
@@ -80,7 +79,8 @@ class node():
         labels = labels.to(self.device, dtype = torch.long)
         # print(labels)
         # zero the parameter gradients
-        self.model.zero_grad(set_to_none=True)
+        # self.model.zero_grad(set_to_none=True)
+        self.optim.zero_grad()
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
@@ -103,7 +103,8 @@ class node():
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
-        self.model.zero_grad(set_to_none=True)
+        # self.model.zero_grad(set_to_none=True)
+        self.optim.zero_grad()
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
@@ -123,9 +124,8 @@ class node():
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
         # model_opt.zero_grad(set_to_none=True)
-        model_opt.zero_grad(set_to_none=True)
-        model_fix.zero_grad(set_to_none=True)
-        # optimizer.zero_grad()
+        # model_fix.zero_grad(set_to_none=True)
+        optimizer.zero_grad()
         # model_2.zero_grad(set_to_none=True)
         # forward + backward + optimize
         # loss 1
@@ -154,6 +154,22 @@ class node():
         # self.loss = outputs
         loss.backward()        
         optimizer.step()
+
+    def train_single_step_contra(self, inputs, labels, optimizer, model_opt, model_sim, model_con):
+        inputs = inputs.to(self.device)
+        labels = torch.flatten(labels)
+        labels = labels.to(self.device, dtype = torch.long)
+        # zero the parameter gradients
+        optimizer.zero_grad()
+        # forward + backward + optimize
+        # contrastive loss
+        output_sup = model_opt(inputs)
+        output_con = torch.inner(model_opt(inputs),model_sim(inputs))
+
+        # self.loss = outputs
+        loss.backward()        
+        optimizer.step()
+
 
     # for IFCA
     def local_train_loss(self, model):

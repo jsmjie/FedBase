@@ -18,8 +18,8 @@ global_rounds = 100
 num_nodes = 200
 local_steps = 10
 batch_size = 32
-optimizer = partial(optim.SGD,lr=0.001, momentum=0.9)
-# optimizer = partial(optim.SGD,lr=0.001)
+# optimizer = partial(optim.SGD,lr=0.001, momentum=0.9)
+optimizer = partial(optim.SGD,lr=0.001)
 # device = torch.device('cuda:2')
 device = torch.device('cuda')
 
