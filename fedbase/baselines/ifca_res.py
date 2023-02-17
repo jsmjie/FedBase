@@ -10,7 +10,6 @@ import os
 import sys
 import inspect
 from functools import partial
-from copy import deepcopy
 
 def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     train_splited, test_splited, split_para = dataset_splited
@@ -20,7 +19,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # initialize
     server = server_class(device)
     server.assign_model(model())
-    server.model_g = deepcopy(model_g)
+
+    server.model_g = model()
+    server.model_g.load_state_dict(model_g.state_dict())
+    server.model_g.to(device)
 
     nodes = [node(i, device) for i in range(num_nodes)]
 
@@ -31,7 +33,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         nodes[i].assign_test(DataLoader(test_splited[i], batch_size=batch_size, shuffle=False))
         # objective
         nodes[i].assign_objective(objective())
-        nodes[i].model_g = deepcopy(model_g)
+
+        nodes[i].model_g = model()
+        nodes[i].model_g.load_state_dict(model_g.state_dict())
+        nodes[i].model_g.to(device)
 
     del train_splited, test_splited
 

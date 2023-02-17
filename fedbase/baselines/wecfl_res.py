@@ -57,15 +57,15 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     for i in range(global_rounds - warmup_rounds):
         print('-------------------Global round %d start-------------------' % (i))
         # local update
-        # for j in range(num_nodes):
-        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-        #         model_opt = nodes[j].model_g, model_fix = cluster_models[[l for l in range(K) if j in assignment[l]][0]]))
-        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
-        #         model_opt = nodes[j].model, model_fix = nodes[j].model_g))
-
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['all'], \
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
+                model_opt = nodes[j].model_g, model_fix = cluster_models[[l for l in range(K) if j in assignment[l]][0]]))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
                 model_opt = nodes[j].model, model_fix = nodes[j].model_g))
+
+        # for j in range(num_nodes):
+        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['all'], \
+        #         model_opt = nodes[j].model, model_fix = nodes[j].model_g))
 
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)

@@ -1,5 +1,4 @@
 # from nodes.node import node
-from copy import deepcopy
 import torch
 from sklearn.cluster import KMeans
 import numpy as np
@@ -20,7 +19,6 @@ class server_class():
             self.model.load_state_dict(model.state_dict())
         except:
             self.model = model
-        # self.model = deepcopy(model)
         self.model.to(self.device)
         # try:
         #     self.model = torch.compile(self.model)

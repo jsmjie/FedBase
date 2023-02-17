@@ -44,19 +44,19 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     cluster_models = [model() for i in range(K)]
 
     # train!
-    b_list = []
-    uu_list =[]
+    # b_list = []
+    # uu_list = []
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
+
         # local update
         for j in range(num_nodes):
-            if not reg:
+            if i < 2:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
-        # server clustering
-        server.weighted_clustering(nodes, list(range(num_nodes)), K)
-
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
+                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = 1, mu = 1))
+                
         # # tsne or pca plot
         # # if i == global_rounds-1:
         # if i == i :
@@ -75,13 +75,16 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # print(b_list, uu_list)
         # for k in range(num_nodes):
         #     nodes[k].grads = []
-        # print(a)
+        
+        # server clustering
+        server.weighted_clustering(nodes, list(range(num_nodes)), K)
+
         # server aggregation and distribution by cluster
         for j in range(K):
             server.aggregate(nodes, [i for i in list(range(num_nodes)) if nodes[j].label==j])
             server.distribute(nodes, [i for i in list(range(num_nodes)) if nodes[j].label==j])
             cluster_models[j].load_state_dict(server.model.state_dict())
-        
+
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()

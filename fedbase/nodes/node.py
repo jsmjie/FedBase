@@ -1,4 +1,3 @@
-from copy import deepcopy
 import torch
 from torch import linalg as LA
 from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
@@ -29,7 +28,7 @@ class node():
         try:
             self.model.load_state_dict(model.state_dict())
         except:
-            self.model = deepcopy(model)
+            self.model = model
         self.model.to(self.device)
         # try:
         #     self.model = torch.compile(self.model)
@@ -84,8 +83,8 @@ class node():
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
-        self.loss = self.objective(outputs, F.one_hot(labels, outputs.shape[1]).float())
-        self.loss.backward()
+        loss = self.objective(outputs, F.one_hot(labels, outputs.shape[1]).float())
+        loss.backward()
 
         # calculate accumulate gradients
         # grads = torch.tensor([])
@@ -93,7 +92,7 @@ class node():
         #     # param.grad = torch.tensor(grads[index])
         #     grads= torch.cat((grads, torch.flatten(param.grad).cpu()),0)
         # self.grads.append(grads)
-        
+
         self.optim.step()
         # self.train_steps+=1
 
@@ -155,21 +154,30 @@ class node():
         loss.backward()        
         optimizer.step()
 
-    def train_single_step_contra(self, inputs, labels, optimizer, model_opt, model_sim, model_con):
+    def train_single_step_con(self, inputs, labels, model_sim, model_all, tmp, mu = 1):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
         # zero the parameter gradients
-        optimizer.zero_grad()
+        # model_opt.zero_grad(set_to_none=True)
+        self.optim.zero_grad()
         # forward + backward + optimize
+
         # contrastive loss
-        output_sup = model_opt(inputs)
-        output_con = torch.inner(model_opt(inputs),model_sim(inputs))
+        output_con_dn = 0
+        for i in model_all:
+            i.to(self.device)
+            output_con_dn += torch.exp(torch.sum(self.model(inputs) * i(inputs), dim = -1)/tmp)
+        output_con_n = torch.exp(torch.sum(self.model(inputs) * model_sim(inputs), dim = -1)/tmp)
+
+        if self.id == 199:
+            print(output_con_n, output_con_dn)
+        # print(output_con_n, output_con_dn)
+        loss = self.objective(self.model(inputs), labels) - torch.mean(torch.log(output_con_n/output_con_dn)) * mu
 
         # self.loss = outputs
         loss.backward()        
-        optimizer.step()
-
+        self.optim.step()
 
     # for IFCA
     def local_train_loss(self, model):
