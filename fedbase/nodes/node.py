@@ -138,8 +138,8 @@ class node():
         for p,q in zip(model_opt.parameters(), model_fix.parameters()):
             reg += torch.norm((p-q),2)
 
-        outputs = model_opt(inputs) + model_fix(inputs) + 0.005 * reg
-        loss = self.objective(outputs, labels)
+        outputs = model_opt(inputs) + model_fix(inputs) 
+        loss = self.objective(outputs, labels) + 0.005 * reg
 
         # loss 3
         # reg = 0
@@ -167,17 +167,36 @@ class node():
         output_con_dn = 0
         for i in model_all:
             i.to(self.device)
-            output_con_dn += torch.exp(torch.sum(self.model(inputs) * i(inputs), dim = -1)/tmp)
-        output_con_n = torch.exp(torch.sum(self.model(inputs) * model_sim(inputs), dim = -1)/tmp)
+            output_con_dn += torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+                 , self.intermediate_output(inputs, i, i.conv2, 'conv2'), dim = -1)/tmp)
+        output_con_n = torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+             , self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'), dim = -1)/tmp)
 
-        if self.id == 199:
-            print(output_con_n, output_con_dn)
-        # print(output_con_n, output_con_dn)
         loss = self.objective(self.model(inputs), labels) - torch.mean(torch.log(output_con_n/output_con_dn)) * mu
 
+        # if self.id == 0:
+        #     # print(self.model.state_dict()['fc1.bias'])
+        #     # print(self.label)
+        #     # for i in range(len(model_all)):
+        #     #     print(i, model_all[i].state_dict()['fc1.bias'])
+        #     print(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2').shape)
+        #     # print(self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'))
+        #     print(output_con_n, output_con_dn)
+        
         # self.loss = outputs
         loss.backward()        
         self.optim.step()
+
+    def intermediate_output(self, inputs, model, model_layer, layer_name):
+        activation = {}
+        def get_activation(name):
+            def hook(model, input, output):
+                activation[name] = output.detach()
+            return hook
+        
+        model_layer.register_forward_hook(get_activation(layer_name))
+        out = model(inputs)
+        return torch.flatten(activation[layer_name],1)
 
     # for IFCA
     def local_train_loss(self, model):

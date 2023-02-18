@@ -63,24 +63,20 @@ class CNNFemnist(nn.Module):
 class CNNFashion_Mnist(nn.Module):
     def __init__(self):
         super(CNNFashion_Mnist, self).__init__()
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, padding=2),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2))
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2))
-        self.fc = nn.Linear(7*7*32, 10)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
+        self.fc1 = nn.Linear(7*7*32, 10)
 
     def forward(self, x):
-        out = self.layer1(x)
-        out = self.layer2(out)
-        out = out.view(out.size(0), -1)
-        out = self.fc(out)
-        return out
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        # x = x.view(x.size(0), -1)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        return x
 
 class CNNCifar(nn.Module):
     def __init__(self):
@@ -95,20 +91,12 @@ class CNNCifar(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
+        # x = x.view(x.size(0), -1)
+        x = torch.flatten(x, 1)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
-
-    # def forward(self, x):
-    #     x = self.pool(F.relu(self.conv1(x)))
-    #     x = self.pool(F.relu(self.conv2(x)))
-    #     x = x.view(-1, 16 * 5 * 5)
-    #     x1 = F.relu(self.fc0(x))
-    #     x = F.relu(self.fc1(x1))
-    #     x = self.fc2(x)
-    #     return F.log_softmax(x, dim=1), x1
 
 class CNNPath(nn.Module):
     def __init__(self):
@@ -123,10 +111,8 @@ class CNNPath(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        # print(x.shape)
-        x = x.view(-1, 16 * 4 * 4)
-        # x = torch.flatten(x,start_dim=1)
-        # print(x.shape)
+        # x = x.view(x.size(0), -1)
+        x = torch.flatten(x, 1)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -135,24 +121,41 @@ class CNNPath(nn.Module):
 class CNNTissue(nn.Module):
     def __init__(self):
         super(CNNTissue, self).__init__()
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, padding=2),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(2))
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, padding=2),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2))
-        self.fc = nn.Linear(7*7*32, 8)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, padding=2)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, padding=2)
+        self.fc1 = nn.Linear(7*7*32, 8)
 
     def forward(self, x):
-        out = self.layer1(x)
-        out = self.layer2(out)
-        out = out.view(out.size(0), -1)
-        out = self.fc(out)
-        return out
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        # x = x.view(x.size(0), -1)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        return x
+
+    # def __init__(self):
+    #     super(CNNTissue, self).__init__()
+    #     self.conv1 = nn.Sequential(
+    #         nn.Conv2d(1, 16, kernel_size=5, padding=2),
+    #         nn.BatchNorm2d(16),
+    #         nn.ReLU(),
+    #         nn.MaxPool2d(2))
+    #     self.conv2 = nn.Sequential(
+    #         nn.Conv2d(16, 32, kernel_size=5, padding=2),
+    #         nn.BatchNorm2d(32),
+    #         nn.ReLU(),
+    #         nn.MaxPool2d(2))
+    #     self.fc = nn.Linear(7*7*32, 8)
+
+    # def forward(self, x):
+    #     out = self.conv1(x)
+    #     out = self.conv2(out)
+    #     out = out.view(out.size(0), -1)
+    #     out = self.fc(out)
+    #     return out
 
 class Lenet(nn.Module):
     def __init__(self, args):

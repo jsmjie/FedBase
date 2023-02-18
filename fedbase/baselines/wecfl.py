@@ -78,8 +78,8 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # print(a)
         # server aggregation and distribution by cluster
         for j in range(K):
-            server.aggregate(nodes, [i for i in list(range(num_nodes)) if nodes[j].label==j])
-            server.distribute(nodes, [i for i in list(range(num_nodes)) if nodes[j].label==j])
+            server.aggregate(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
+            server.distribute(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
             cluster_models[j].load_state_dict(server.model.state_dict())
         
         # test accuracy
