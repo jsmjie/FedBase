@@ -165,12 +165,17 @@ class node():
 
         # contrastive loss
         output_con_dn = 0
+        # for i in model_all:
+        #     i.to(self.device)
+        #     output_con_dn += torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+        #          , self.intermediate_output(inputs, i, i.conv2, 'conv2'), dim = -1)/tmp)
+        # output_con_n = torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+        #      , self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'), dim = -1)/tmp)
+        
         for i in model_all:
             i.to(self.device)
-            output_con_dn += torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
-                 , self.intermediate_output(inputs, i, i.conv2, 'conv2'), dim = -1)/tmp)
-        output_con_n = torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
-             , self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'), dim = -1)/tmp)
+            output_con_dn += torch.exp(F.cosine_similarity(self.model(inputs), i(inputs))/tmp)
+        output_con_n = torch.exp(F.cosine_similarity(self.model(inputs), model_sim(inputs))/tmp)
 
         loss = self.objective(self.model(inputs), labels) - torch.mean(torch.log(output_con_n/output_con_dn)) * mu
 

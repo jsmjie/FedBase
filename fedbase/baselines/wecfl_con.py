@@ -12,7 +12,7 @@ import inspect
 from functools import partial
 import numpy as np
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, tmp, mu, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -51,11 +51,11 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
         # local update
         for j in range(num_nodes):
-            if i < 1:
+            if i < 5:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
-                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = 1, mu = 0.5))
+                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu))
                 
         # # tsne or pca plot
         # # if i == global_rounds-1:
