@@ -92,9 +92,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     
     # log
     if not reg:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K)  + '_' + split_para, nodes, server)
+        log(os.path.basename(__file__)[:-3] + '_' + base + '_'+ str(K)  + '_' + split_para, nodes, server)
     else:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
+        log(os.path.basename(__file__)[:-3] + '_' + base + '_'+ str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
 
     return cluster_models
     
