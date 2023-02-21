@@ -19,10 +19,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # initialize
     server = server_class(device)
     server.assign_model(model())
-
-    server.model_g = model()
+    
+    server.model_g = model().to(device)
     server.model_g.load_state_dict(model_g.state_dict())
-    server.model_g.to(device)
 
     nodes = [node(i, device) for i in range(num_nodes)]
 
@@ -34,14 +33,13 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # objective
         nodes[i].assign_objective(objective())
 
-        nodes[i].model_g = model()
-        nodes[i].model_g.load_state_dict(model_g.state_dict())
-        nodes[i].model_g.to(device)
+        nodes[i].model_1 = model()
+        nodes[i].model_1.to(device)
 
     del train_splited, test_splited
 
     # initialize K cluster model
-    cluster_models = [model() for i in range(K)]
+    cluster_models = [model().to(device) for i in range(K)]
 
     # train!
     for i in range(global_rounds - warmup_rounds):
@@ -59,9 +57,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             assignment[m].append(i)
             nodes[i].label = m
             nodes[i].assign_model(cluster_models[m])
-            nodes[i].assign_optim({'local': optimizer(nodes[i].model.parameters()),\
-                'global': optimizer(nodes[i].model_g.parameters()),\
-                    'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_g.parameters()))})
+            nodes[i].assign_optim({'local_0': optimizer(nodes[i].model.parameters()),\
+                'local_1': optimizer(nodes[i].model_1.parameters()),\
+                    'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_1.parameters()))})
 
         # print(server.clustering)
         server.clustering['label'].append(assignment)
@@ -70,13 +68,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
         # local update
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
-                model_opt = nodes[j].model, model_fix = nodes[j].model_g))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_0'], \
+                model_opt = nodes[j].model, model_fix = server.model_g))
         
-        # for j in range(num_nodes):
-        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['all'], \
-        #         model_opt = nodes[j].model, model_fix = nodes[j].model_g))
-
         # server aggregation and distribution by cluster
         for k in range(K):
             if len(assignment[k])>0:
@@ -85,12 +79,11 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                 cluster_models[k].load_state_dict(server.model.state_dict())
         
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-                model_opt = nodes[j].model_g, model_fix = cluster_models[nodes[j].label]))
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
+                model_opt = nodes[j].model_1, model_fix = cluster_models[nodes[j].label]))
             
         # aggregate model_g
         server.aggregate_model_g(nodes, list(range(num_nodes)))
-        server.distribute_model_g(nodes, list(range(num_nodes)))
 
         # test accuracy
         for i in range(num_nodes):

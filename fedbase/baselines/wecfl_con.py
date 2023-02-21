@@ -12,7 +12,7 @@ import inspect
 from functools import partial
 import numpy as np
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, tmp, mu, warmup_rounds, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, tmp, mu, warmup_rounds, base, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -41,7 +41,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     server.distribute(nodes, list(range(num_nodes)))
 
     # initialize K cluster model
-    cluster_models = [model() for i in range(K)]
+    cluster_models = [model().to(device) for i in range(K)]
 
     # train!
     # b_list = []
@@ -55,7 +55,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
-                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu))
+                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = base))
                 
         # # tsne or pca plot
         # # if i == global_rounds-1:

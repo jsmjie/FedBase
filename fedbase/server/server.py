@@ -20,11 +20,16 @@ class server_class():
         except:
             self.model = model
         self.model.to(self.device)
-        # try:
-        #     self.model = torch.compile(self.model)
-        # except:
-        #     print(traceback.format_exc())
-        #     print('not eligible for 2.0')
+
+    def aggregate(self, node_id_list, model_list, weight_list):
+        aggregated_weights = self.model.state_dict()
+        for j in aggregated_weights.keys():
+            aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(self.device)
+        weight_list = [i/sum(weight_list) for i in weight_list]
+        for i in node_id_list:
+            for j in model_list[i].state_dict().keys():
+                aggregated_weights[j] += model_list[i].state_dict()[j]*weight_list[i]
+        return aggregated_weights
 
     def aggregate(self, nodes, idlist, weight_type='data_size'):
         aggregated_weights = self.model.state_dict()
@@ -51,8 +56,8 @@ class server_class():
                 weight = 1/len(idlist)
             elif weight_type == 'data_size':
                 weight = nodes[i].data_size/sum_size
-            for j in nodes[i].model_g.state_dict().keys():
-                aggregated_weights[j] += nodes[i].model_g.state_dict()[j]*weight
+            for j in nodes[i].model_1.state_dict().keys():
+                aggregated_weights[j] += nodes[i].model_1.state_dict()[j]*weight
         self.model_g.load_state_dict(aggregated_weights)
         return self.model_g
     

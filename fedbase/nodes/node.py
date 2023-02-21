@@ -134,12 +134,12 @@ class node():
         # loss = ls(outputs, labels)
 
         # loss 2
-        reg = 0
-        for p,q in zip(model_opt.parameters(), model_fix.parameters()):
-            reg += torch.norm((p-q),2)
+        # reg = 0
+        # for p,q in zip(model_opt.parameters(), model_fix.parameters()):
+        #     reg += torch.norm((p-q),2)
 
         outputs = model_opt(inputs) + model_fix(inputs) 
-        loss = self.objective(outputs, labels) + 0.005 * reg
+        loss = self.objective(outputs, labels)
 
         # loss 3
         # reg = 0
@@ -154,7 +154,7 @@ class node():
         loss.backward()        
         optimizer.step()
 
-    def train_single_step_con(self, inputs, labels, model_sim, model_all, tmp, mu = 1):
+    def train_single_step_con(self, inputs, labels, model_sim, model_all, tmp, mu, base = 'representation'):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
@@ -165,19 +165,28 @@ class node():
 
         # contrastive loss
         output_con_dn = 0
-        # for i in model_all:
-        #     i.to(self.device)
-        #     output_con_dn += torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
-        #          , self.intermediate_output(inputs, i, i.conv2, 'conv2'), dim = -1)/tmp)
-        # output_con_n = torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
-        #      , self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'), dim = -1)/tmp)
-        
-        for i in model_all:
-            i.to(self.device)
-            output_con_dn += torch.exp(F.cosine_similarity(self.model(inputs), i(inputs))/tmp)
-        output_con_n = torch.exp(F.cosine_similarity(self.model(inputs), model_sim(inputs))/tmp)
+        if base == 'representation':
+            # for i in model_all:
+            #     i.to(self.device)
+            #     output_con_dn += torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+            #          , self.intermediate_output(inputs, i, i.conv2, 'conv2'), dim = -1)/tmp)
+            # output_con_n = torch.exp(F.cosine_similarity(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2')\
+            #      , self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'), dim = -1)/tmp)
+            for i in model_all:
+                output_con_dn += torch.exp(F.cosine_similarity(self.model(inputs), i(inputs))/tmp)
+            output_con_n = torch.exp(F.cosine_similarity(self.model(inputs), model_sim(inputs))/tmp)
+            con_loss = torch.mean(-torch.log(output_con_n/output_con_dn))
 
-        loss = self.objective(self.model(inputs), labels) - torch.mean(torch.log(output_con_n/output_con_dn)) * mu
+        elif base == 'parameter':
+            self.anchor = torch.flatten(model_sim.state_dict()[list(model_sim.state_dict().keys())[-2]])
+            self.negative = [torch.flatten(i.state_dict()[list(i.state_dict().keys())[-2]]) for i in model_all]
+            
+            for i in range(len(model_all)):
+                output_con_dn += torch.exp(F.cosine_similarity(torch.flatten(self.model.state_dict()[list(self.model.state_dict().keys())[-2]]), self.negative[i], dim=0)/tmp)
+            output_con_n = torch.exp(F.cosine_similarity(torch.flatten(self.model.state_dict()[list(self.model.state_dict().keys())[-2]]), self.anchor, dim=0)/tmp)
+            con_loss = -torch.log(output_con_n/output_con_dn)
+
+        loss = self.objective(self.model(inputs), labels) + con_loss * mu
 
         # if self.id == 0:
         #     # print(self.model.state_dict()['fc1.bias'])
@@ -186,7 +195,7 @@ class node():
         #     #     print(i, model_all[i].state_dict()['fc1.bias'])
         #     print(self.intermediate_output(inputs, self.model, self.model.conv2, 'conv2').shape)
         #     # print(self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'))
-        #     print(output_con_n, output_con_dn)
+            # print(output_con_n, output_con_dn)
         
         # self.loss = outputs
         loss.backward()        
