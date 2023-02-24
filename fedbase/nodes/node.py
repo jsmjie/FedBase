@@ -154,7 +154,7 @@ class node():
         loss.backward()        
         optimizer.step()
 
-    def train_single_step_con(self, inputs, labels, model_sim, model_all, tmp, mu, base = 'representation'):
+    def train_single_step_con(self, inputs, labels, model_sim, model_all, tmp, mu, base = 'representation', reg_lam = None, reg_model = None):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
@@ -178,16 +178,25 @@ class node():
             con_loss = torch.mean(-torch.log(output_con_n/output_con_dn))
 
         elif base == 'parameter':
-            self.anchor = torch.flatten(model_sim.state_dict()[list(model_sim.state_dict().keys())[-2]])
-            self.negative = [torch.flatten(i.state_dict()[list(i.state_dict().keys())[-2]]) for i in model_all]
-            
+            negative = [torch.cat(tuple([torch.flatten(i.state_dict()[k]) for k in i.state_dict().keys() if 'fc' in k]),0) for i in model_all]
+            positive = torch.cat(tuple([torch.flatten(self.model.state_dict()[k]) for k in self.model.state_dict().keys() if 'fc' in k]),0)
+
             for i in range(len(model_all)):
-                output_con_dn += torch.exp(F.cosine_similarity(torch.flatten(self.model.state_dict()[list(self.model.state_dict().keys())[-2]]), self.negative[i], dim=0)/tmp)
-            output_con_n = torch.exp(F.cosine_similarity(torch.flatten(self.model.state_dict()[list(self.model.state_dict().keys())[-2]]), self.anchor, dim=0)/tmp)
-            con_loss = -torch.log(output_con_n/output_con_dn)
-
-        loss = self.objective(self.model(inputs), labels) + con_loss * mu
-
+                tmp = torch.exp(F.cosine_similarity(positive, negative[i], dim=0)/tmp)
+                output_con_dn += tmp
+                if i == self.label:
+                    output_con_n = tmp
+            con_loss = -torch.log(output_con_n/output_con_dn) 
+        else:
+            con_loss = 0
+        
+        # knowledge sharing
+        reg = 0
+        if reg_lam:
+            reg = torch.square(torch.norm(torch.cat(tuple([torch.flatten(self.model.state_dict()[k] - reg_model.state_dict()[k])\
+                 for k in self.model.state_dict().keys() if 'fc' not in k]),0),2))
+                
+        loss = self.objective(self.model(inputs), labels) + con_loss * mu + reg_lam * reg
         # if self.id == 0:
         #     # print(self.model.state_dict()['fc1.bias'])
         #     # print(self.label)
@@ -197,7 +206,6 @@ class node():
         #     # print(self.intermediate_output(inputs, model_sim, model_sim.conv2, 'conv2'))
             # print(output_con_n, output_con_dn)
         
-        # self.loss = outputs
         loss.backward()        
         self.optim.step()
 

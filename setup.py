@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fedbase",
-    version="0.8.19",
+    version="0.9.0",
     author="Jie MA",
     # author_email="ustcmj@gmail.com, jie.ma-5@student.uts.edu.au",
     author_email="ustcmj@gmail.com",

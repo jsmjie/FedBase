@@ -12,7 +12,7 @@ import inspect
 from functools import partial
 import numpy as np
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, tmp, mu, warmup_rounds, base, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, warmup_rounds, tmp, mu, base, reg_lam = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -51,11 +51,16 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
         # local update
         for j in range(num_nodes):
-            if i < warmup_rounds:
+            if i == 0:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
+            elif i < warmup_rounds:
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
+                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = None\
+                        , reg_lam = reg_lam, reg_model = server.aggregate(nodes, list(range(num_nodes)))))
             else:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
-                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = base))
+                    model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = base\
+                        , reg_lam = reg_lam, reg_model = server.aggregate(nodes, list(range(num_nodes)))))
                 
         # # tsne or pca plot
         # # if i == global_rounds-1:
@@ -91,10 +96,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.acc(nodes, list(range(num_nodes)))
     
     # log
-    if not reg:
+    if not reg_lam:
         log(os.path.basename(__file__)[:-3] + '_' + base + '_'+ str(K)  + '_' + split_para, nodes, server)
     else:
-        log(os.path.basename(__file__)[:-3] + '_' + base + '_'+ str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
+        log(os.path.basename(__file__)[:-3] + '_' + base + '_'+ str(K) + '_' + str(reg_lam) + '_' + split_para, nodes, server)
 
     return cluster_models
     

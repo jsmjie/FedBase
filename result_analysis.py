@@ -52,7 +52,7 @@ def plt_maximize():
 # print(a)
 
 # folder = './log/log_groupwise/'
-folder = './log/res_230208/'
+folder = './log/'
 files = [folder + f for f in os.listdir(folder)]
 for f in files:
     try:
@@ -60,14 +60,14 @@ for f in files:
     except:
         pass
 # files = [f.replace('__','_') for f in files]
-# for dataset in ['fashion_mnist', 'cifar10']:
-for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tissuemnist']:
+for dataset in ['fashion_mnist', 'cifar10']:
+# for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tissuemnist']:
 # for dataset in ['cifar10']:
 # for dataset in [ 'medmnist_octmnist']:
     # client-wise
-    for noniid in ['200_0.1_dirichlet','200_2_class']:
+    # for noniid in ['200_0.1_dirichlet','200_2_class']:
     # cluster-wise
-    # for noniid in ['10_dirichlet','3_class']:
+    for noniid in ['10_dirichlet','3_class']:
         print(dataset, noniid)
     # for noniid in ['0.1','6']:
         # central
@@ -101,7 +101,8 @@ for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tiss
         #     'wecfl_3_0.95', 'wecfl_5_0.95', 'wecfl_10_0.95', 'ifca_3_0.95', 'ifca_5_0.95', 'ifca_10_0.95', 'fesem_3_0.95', 'fesem_5_0.95', 'fesem_10_0.95']:
         # for method in ['fedavg', 'fedprox_0.1', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5_0.1', 'fedprox_ensemble_10_0.1', 'ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10']:
         # for method in [i+j for i in ['ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10'] for j in ['','_1','_0.1','_0.01','_0.001']]:
-        for method in ['ifca_res_5','wecfl_res_5', 'ifca_res_10','wecfl_res_10']:
+        # for method in ['ifca_res_5','wecfl_res_5', 'ifca_res_10','wecfl_res_10']:
+        for method in ['wecfl_con_parameter_5','wecfl_con_parameter_10','wecfl_con_representation_5','wecfl_con_representation_10']:
         # for method in ['fedavg', 'fedprox', 'ditto', 'ifca_10', 'fesem_10', 'wecfl_10', 'fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedavg_ensemble_5','fedprox_ensemble_5','fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedprox_ensemble_5_0.95','fedprox_ensemble_10_0.95']:
@@ -134,14 +135,14 @@ for dataset in ['fashion_mnist', 'cifar10', 'medmnist_pathmnist', 'medmnist_tiss
                     # acc_df_tmp = acc_df_tmp.rename(columns={i : 'test acc'})
                     acc_df_n = pd.concat([acc_df_n, acc_df_tmp], axis=0)
                 acc_df_n = acc_df_n.reset_index(drop=True)
-                print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test acc'])*100,2))\
-                    ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=68]['test macro f1'])*100,2)))
+                print(method, dataset, noniid, "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=max(acc_df_n['round'])-3]['test acc'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=max(acc_df_n['round'])-3]['test acc'])*100,2))\
+                    ,' & ' , "{}$\pm${}".format(round(np.mean(acc_df_n[acc_df_n['round'] >=max(acc_df_n['round'])-3]['test macro f1'])*100,2), round(np.std(acc_df_n[acc_df_n['round'] >=max(acc_df_n['round'])-3]['test macro f1'])*100,2)))
                 # acc_df_n.to_csv('./vis/nips2022/' + method + '_'+ noniid + dataset +'.csv')
                 list_round, list_acc = [],[]
                 for i in acc_df.columns:
                     list_round.append(i)
                     list_acc.append(acc_df.loc[0,i][0])
-                print(list_round, list_acc)
+                # print(list_round, list_acc)
                 sns.lineplot(x=list_round, y=list_acc, label = method)
                 # plt.show()
                 # sns.lineplot(x=acc_df_n["round"], y=acc_df_n["test macro f1"], label = method)
