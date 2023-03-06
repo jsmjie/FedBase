@@ -117,7 +117,7 @@ class server_class():
                 weight.append(nodes[i].data_size/sum_size)
             X.append(np.array(torch.flatten(nodes[i].model.state_dict()[list(nodes[i].model.state_dict().keys())[-2]]).cpu()))
         # print(X, np.array(X).shape)
-        kmeans = KMeans(n_clusters=K, init = 5).fit(np.asarray(X), sample_weight= weight)
+        kmeans = KMeans(n_clusters=K, n_init = 5).fit(np.asarray(X), sample_weight= weight)
         labels = kmeans.labels_
         print(labels)
         print([list(labels).count(i) for i in range(K)])
