@@ -67,7 +67,7 @@ for dataset in ['fashion_mnist', 'cifar10']:
     # client-wise
     # for noniid in ['200_0.1_dirichlet','200_2_class']:
     # cluster-wise
-    for noniid in ['10_dirichlet','3_class']:
+    for noniid in ['10_dirichlet','3_class','200_0.1_dirichlet','200_2_class']:
         print(dataset, noniid)
     # for noniid in ['0.1','6']:
         # central
@@ -102,7 +102,7 @@ for dataset in ['fashion_mnist', 'cifar10']:
         # for method in ['fedavg', 'fedprox_0.1', 'fedavg_ensemble_5', 'fedavg_ensemble_10', 'fedprox_ensemble_5_0.1', 'fedprox_ensemble_10_0.1', 'ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10']:
         # for method in [i+j for i in ['ifca_5', 'ifca_10', 'fesem_5', 'fesem_10',  'wecfl_5', 'wecfl_10'] for j in ['','_1','_0.1','_0.01','_0.001']]:
         # for method in ['ifca_res_5','wecfl_res_5', 'ifca_res_10','wecfl_res_10']:
-        for method in ['wecfl_con_parameter_5','wecfl_con_parameter_10','wecfl_con_representation_5','wecfl_con_representation_10']:
+        for method in ['wecfl_con_parameter_5_0.001','wecfl_con_parameter_10_0.001','wecfl_con_representation_5_0.001','wecfl_con_representation_10_0.001']:
         # for method in ['fedavg', 'fedprox', 'ditto', 'ifca_10', 'fesem_10', 'wecfl_10', 'fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedavg_ensemble_5','fedprox_ensemble_5','fedavg_ensemble_10','fedprox_ensemble_10']:
         # for method in ['fedprox_ensemble_5_0.95','fedprox_ensemble_10_0.95']:
