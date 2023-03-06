@@ -191,10 +191,11 @@ class node():
             con_loss = 0
         
         # knowledge sharing
-        reg = 0
         if reg_lam:
             reg = torch.square(torch.norm(torch.cat(tuple([torch.flatten(self.model.state_dict()[k] - reg_model.state_dict()[k])\
                  for k in self.model.state_dict().keys() if 'fc' not in k]),0),2))
+        else:
+            reg, reg_lam = 0, 0
                 
         loss = self.objective(self.model(inputs), labels) + con_loss * mu + reg_lam * reg
         # if self.id == 0:
