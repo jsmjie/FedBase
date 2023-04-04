@@ -31,56 +31,29 @@ class server_class():
                 aggregated_weights[j] += model_list[i].state_dict()[j]*weight_list[i]
         return aggregated_weights
 
-    def aggregate(self, nodes, idlist, weight_type='data_size'):
-        aggregated_weights = self.model.state_dict()
+    def aggregate(self, model_list, weight_list):
+        aggregated_weights = model_list[0].state_dict()
         for j in aggregated_weights.keys():
             aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(self.device)
-        sum_size = sum([nodes[i].data_size for i in idlist])
-        for i in idlist:
-            if weight_type == 'equal':
-                weight = 1/len(idlist)
-            elif weight_type == 'data_size':
-                weight = nodes[i].data_size/sum_size
-            for j in nodes[i].model.state_dict().keys():
-                aggregated_weights[j] += nodes[i].model.state_dict()[j]*weight
-        self.model.load_state_dict(aggregated_weights)
-        return self.model
-
-    def aggregate_model_g(self, nodes, idlist, weight_type='data_size'):
-        aggregated_weights = self.model_g.state_dict()
-        for j in aggregated_weights.keys():
-            aggregated_weights[j] = torch.zeros(aggregated_weights[j].shape).to(self.device)
-        sum_size = sum([nodes[i].data_size for i in idlist])
-        for i in idlist:
-            if weight_type == 'equal':
-                weight = 1/len(idlist)
-            elif weight_type == 'data_size':
-                weight = nodes[i].data_size/sum_size
-            for j in nodes[i].model_1.state_dict().keys():
-                aggregated_weights[j] += nodes[i].model_1.state_dict()[j]*weight
-        self.model_g.load_state_dict(aggregated_weights)
-        return self.model_g
+        # sum_size = sum([nodes[i].data_size for i in idlist])
+        for i in range(len(model_list)):
+            for j in model_list[i].state_dict().keys():
+                aggregated_weights[j] += model_list[i].state_dict()[j]*weight_list[i]
+        return aggregated_weights
     
-    def acc(self, nodes, idlist, weight_type='data_size'):
+    def distribute(self, model_in_list, model_dis = None):
+        if model_dis is None:
+            model_dis = self.model
+        for i in model_in_list:
+            i.load_state_dict(model_dis.state_dict())
+
+    def acc(self, nodes, weight_list):
         global_test_metrics = [0]*2
-        sum_size = sum([nodes[i].data_size for i in idlist])
-        for i in idlist:
-            if weight_type == 'equal':
-                weight = 1/len(idlist)
-            elif weight_type == 'data_size':
-                weight = nodes[i].data_size/sum_size
+        for i in range(len(weight_list)):
             for j in range(len(global_test_metrics)):
-                global_test_metrics[j] += weight*nodes[i].test_metrics[-1][j]
+                global_test_metrics[j] += weight_list[i]*nodes[i].test_metrics[-1][j]
         print('GLOBAL Accuracy, Macro F1 is %.2f %%, %.2f %%' % (100*global_test_metrics[0], 100*global_test_metrics[1]))
         self.test_metrics.append(global_test_metrics)
-               
-    def distribute(self, nodes, idlist):
-        for i in idlist:
-            nodes[i].model.load_state_dict(self.model.state_dict())
-    
-    def distribute_model_g(self, nodes, idlist):
-        for i in idlist:
-            nodes[i].model_g.load_state_dict(self.model_g.state_dict())
 
     def client_sampling(self, frac, distribution):
         pass

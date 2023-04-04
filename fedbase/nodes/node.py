@@ -262,7 +262,7 @@ class node():
         acc = accuracy_score(label_ts.cpu(), predict_ts.cpu())
         return acc
 
-    def local_test(self):
+    def local_test(self, model_res = None):
         predict_ts = torch.empty(0).to(self.device)
         label_ts = torch.empty(0).to(self.device)
         with torch.no_grad():
@@ -271,6 +271,10 @@ class node():
                 inputs = inputs.to(self.device)
                 labels = torch.flatten(labels)
                 labels = labels.to(self.device, dtype = torch.long)
+                if model_res:
+                    outputs = model_res(inputs) + self.model(inputs)
+                else:
+                    outputs = self.model(inputs) 
                 outputs = self.model(inputs)
                 # print(outputs.data.dtype)
                 _, predicted = torch.max(outputs.data, 1)
@@ -282,7 +286,7 @@ class node():
         # print('Accuracy, Macro F1, Micro F1 of Device %d on the %d test cases: %.2f %%, %.2f, %.2f' % (self.id, len(label_ts), acc*100, macro_f1, micro_f1))
         print('Accuracy, Macro F1 of Device %d on the %d test cases: %.2f %%, %.2f %%' % (self.id, len(label_ts), acc*100, macro_f1*100))
         self.test_metrics.append([acc, macro_f1])
-        # torch.cuda.empty_cache()
+
 
     def local_ensemble_test(self, model_list, voting = 'soft'):
         predict_ts = torch.empty(0).to(self.device)

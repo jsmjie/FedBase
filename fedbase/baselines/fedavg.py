@@ -34,8 +34,9 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
     del train_splited, test_splited
 
     # initialize parameters to nodes
-    server.distribute(nodes, list(range(num_nodes)))
+    server.distribute([nodes[i].model for i in range(num_nodes)])
 
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
     # train!
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
@@ -43,12 +44,12 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         for j in range(num_nodes):
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
         # server aggregation and distribution
-        server.aggregate(nodes, list(range(num_nodes)))
-        server.distribute(nodes, list(range(num_nodes)))
+        server.model.load_state_dict(server.aggregate([nodes[i].model for i in range(num_nodes)], weight_list))
+        server.distribute([nodes[i].model for i in range(num_nodes)])
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()
-        server.acc(nodes, list(range(num_nodes)))
+        server.acc(nodes, weight_list)
 
     # log
     if log_file:

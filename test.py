@@ -13,7 +13,7 @@ import multiprocessing as mp
 import time
 import torchvision.models as models
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__))) # set the current path as the working directory
 global_rounds = 100
 num_nodes = 200
 local_steps = 10
@@ -21,9 +21,10 @@ batch_size = 32
 # optimizer = partial(optim.SGD,lr=0.001, momentum=0.9)
 optimizer = partial(optim.SGD,lr=0.001)
 # device = torch.device('cuda:2')
-device = torch.device('cuda')
+device = torch.device('cuda')  # Use GPU if available
 
-@unpack_args
+
+@unpack_args 
 def main0(seeds, dataset_splited, model):
     np.random.seed(seeds)
     central.run(dataset_splited, batch_size, model, nn.CrossEntropyLoss, optimizer, global_rounds, device = device)
@@ -81,9 +82,10 @@ if __name__ == '__main__':
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # cfl_res.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # ifca_res.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, 3, global_rounds, local_steps)
+    ifca_res.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, 3, global_rounds, local_steps)
     # wecfl_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, tmp = 0.1, mu =10, warmup_rounds = 1, base = 'representation')
-    wecfl_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =10, base = 'parameter', reg_lam = 0.01)
+    # wecfl_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =10, base = 'parameter', reg_lam = 0.01)
+    # ifca_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =10, base = 'parameter', reg_lam = 0.01)
     # wecfl.run(data_process('cifar10').split_dataset(200, 0.1, 'dirichlet'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # wecfl_res.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, 2, global_rounds, local_steps)
     # ifca.run(data_process('fashion_mnist').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 5, 'dirichlet'), batch_size, 10, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
