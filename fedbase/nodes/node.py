@@ -3,7 +3,7 @@ from torch import linalg as LA
 from fedbase.utils.model_utils import save_checkpoint, load_checkpoint
 from fedbase.model.model import CNNMnist, MLP
 from sklearn.metrics import accuracy_score, f1_score
-from fedbase.utils.utils import unpack_args
+from fedbase.utils.tools import unpack_args
 from functools import partial
 from statistics import mode
 import torch.nn.functional as F
