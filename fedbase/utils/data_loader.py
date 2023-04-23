@@ -6,7 +6,7 @@ import torch
 from torch._utils import _accumulate
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from fedbase.utils.utils import get_targets
+from fedbase.utils.tools import get_targets
 from fedbase.utils import femnist
 import os
 # import pickle

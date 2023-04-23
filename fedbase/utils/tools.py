@@ -46,3 +46,7 @@ def get_targets(dataset):
 
     # raise NotImplementedError(f"Unknown dataset {dataset}!") 
 # find_files('./log/central*cifar10*')
+
+
+def add_(input_str):
+    return f'_{str(input_str)}' if input_str is not None else ''

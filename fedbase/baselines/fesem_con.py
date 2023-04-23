@@ -38,7 +38,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     del train_splited, test_splited
 
     # initialize parameters to nodes
-    server.distribute(nodes, list(range(num_nodes)))
+    server.distribute([nodes[i].model for i in range(num_nodes)])
 
     # initialize K cluster model
     cluster_models = [model().to(device) for i in range(K)]
@@ -86,8 +86,10 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
         # server aggregation and distribution by cluster
         for j in range(K):
-            server.aggregate(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
-            server.distribute(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
+            id_list = [i for i in list(range(num_nodes)) if nodes[i].label==j]
+            server.modelload_state_dict(server.aggregate([nodes[i] for i in id_list], \
+                [nodes[i].data_size/sum([nodes[i].data_size for i in id_list]) for i in id_list]))
+            server.distribute([nodes[i].model for i in id_list])
             cluster_models[j].load_state_dict(server.model.state_dict())
 
         # test accuracy
