@@ -1,5 +1,6 @@
 from fedbase.utils.data_loader import data_process, log
 from fedbase.nodes.node import node
+from fedbase.utils.tools import add_
 from fedbase.server.server import server_class
 import torch
 from torch.utils.data import DataLoader
@@ -62,34 +63,34 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         print([len(assignment[i]) for i in range(len(assignment))])
 
         # local update
+        weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
+        server.model.load_state_dict(server.aggregate([nodes[i].model for i in range(num_nodes)], weight_list))
         for j in range(num_nodes):
             if i == 0:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             elif i < warmup_rounds:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
                     model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = None\
-                        , reg_lam = reg_lam, reg_model = server.aggregate(nodes, list(range(num_nodes)))))
+                        , reg_lam = reg_lam, reg_model = server.model))
             else:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_con, \
                     model_sim = cluster_models[nodes[j].label], model_all = cluster_models, tmp = tmp, mu = mu, base = base\
-                        , reg_lam = reg_lam, reg_model = server.aggregate(nodes, list(range(num_nodes)))))
+                        , reg_lam = reg_lam, reg_model = server.model))
 
         # server aggregation and distribution by cluster
         for k in range(K):
             if len(assignment[k])>0:
-                server.aggregate(nodes, assignment[k])
-                server.distribute(nodes, assignment[k])
+                weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assignment[k]]) for i in assignment[k]]
+                server.aggregate([nodes[i].model for i in assignment[k]], weight_ls)
+                server.distribute([nodes[i].model for i in assignment[k]])
                 cluster_models[k].load_state_dict(server.model.state_dict())
 
         # test accuracy
         for i in range(num_nodes):
             nodes[i].local_test()
-        server.acc(nodes, list(range(num_nodes)))
+        server.acc(nodes, weight_list)
 
     # log
-    if reg_lam:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg_lam) + '_' + split_para, nodes, server)
-    else:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg_lam) + add_(split_para), nodes, server)
 
     return cluster_models

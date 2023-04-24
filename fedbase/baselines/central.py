@@ -1,4 +1,5 @@
 from fedbase.utils.data_loader import data_process, log
+from fedbase.utils.tools import add_
 from fedbase.nodes.node import node
 import torch
 from torch.utils.data import DataLoader
@@ -27,6 +28,6 @@ def run(dataset, batch_size, model, objective, optimizer, global_rounds, device 
         nodes0.local_test()
 
     # log
-    log(os.path.basename(__file__)[:-3]+ '_' + str(dt.dataset_name), [nodes0], server={})
+    log(os.path.basename(__file__)[:-3]+ add_(dt.dataset_name), [nodes0], server={})
 
     return nodes0.model

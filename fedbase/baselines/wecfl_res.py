@@ -1,5 +1,6 @@
 from fedbase.utils.data_loader import data_process, log
 from fedbase.utils.visualize import dimension_reduction
+from fedbase.utils.tools import add_
 from fedbase.nodes.node import node
 from fedbase.server.server import server_class
 from fedbase.baselines import local
@@ -86,10 +87,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.acc(nodes, list(range(num_nodes)))
     
     # log
-    if not reg:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K)  + '_' + split_para, nodes, server)
-    else:
-        log(os.path.basename(__file__)[:-3] + '_' + str(K) + '_' + str(reg) + '_' + split_para, nodes, server)
+    log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
 
     return cluster_models
     

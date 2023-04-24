@@ -1,5 +1,6 @@
 from fedbase.utils.data_loader import data_process, log
 from fedbase.nodes.node import node
+from fedbase.utils.tools import add_
 from fedbase.server.server import server_class
 import torch
 from torch.utils.data import DataLoader
@@ -52,6 +53,6 @@ def run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, glo
         server.acc(nodes, weight_list)
 
     # log
-    log(os.path.basename(__file__)[:-3] + '_' + str(reg) + '_' + split_para , nodes, server)
+    log(os.path.basename(__file__)[:-3] + add_(reg) + add_(split_para) , nodes, server)
 
     return server.model
