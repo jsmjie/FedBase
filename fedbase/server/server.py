@@ -41,11 +41,11 @@ class server_class():
                 aggregated_weights[j] += model_list[i].state_dict()[j]*weight_list[i]
         return aggregated_weights
     
-    def distribute(self, model_in_list, model_dis = None):
-        if model_dis is None:
-            model_dis = self.model
+    def distribute(self, model_in_list, model_dis_dict = None):
+        if not model_dis_dict:
+            model_dis_dict = self.model.state_dict()
         for i in model_in_list:
-            i.load_state_dict(model_dis.state_dict())
+            i.load_state_dict(model_dis_dict)
 
     def acc(self, nodes, weight_list):
         global_test_metrics = [0]*2
