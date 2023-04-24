@@ -79,14 +79,16 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # print(a)
         # server aggregation and distribution by cluster
         for j in range(K):
-            server.aggregate(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
-            server.distribute(nodes, [i for i in list(range(num_nodes)) if nodes[i].label==j])
-            cluster_models[j].load_state_dict(server.model.state_dict())
-        
+            assign_ls = [i for i in list(range(num_nodes)) if nodes[i].label==j]
+            weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assign_ls]) for i in assign_ls]
+            model_k = server.aggregate([nodes[i].model for i in assign_ls], weight_ls)
+            server.distribute([nodes[i].model for i in assign_ls], model_k)
+            cluster_models[j].load_state_dict(model_k)
+
         # test accuracy
         for j in range(num_nodes):
             nodes[j].local_test()
-        server.acc(nodes, list(range(num_nodes)))
+        server.acc(nodes, weight_list)
     
     # log
     log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)

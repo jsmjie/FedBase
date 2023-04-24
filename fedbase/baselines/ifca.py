@@ -72,9 +72,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         for k in range(K):
             if len(assignment[k])>0:
                 weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assignment[k]]) for i in assignment[k]]
-                server.aggregate([nodes[i].model for i in assignment[k]], weight_ls)
-                server.distribute([nodes[i].model for i in assignment[k]])
-                cluster_models[k].load_state_dict(server.model.state_dict())
+                model_k = server.aggregate([nodes[i].model for i in assign_ls], weight_ls)
+                server.distribute([nodes[i].model for i in assignment[k]], model_k)
+                cluster_models[k].load_state_dict(model_k)
 
         # test accuracy
         for i in range(num_nodes):
