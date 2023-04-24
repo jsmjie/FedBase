@@ -38,8 +38,8 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # objective
         nodes[i].assign_objective(objective())
         # optim
-        nodes[i].assign_optim({'local': optimizer(nodes[i].model.parameters()),\
-                'global': optimizer(nodes[i].model_g.parameters()),\
+        nodes[i].assign_optim({'local_0': optimizer(nodes[i].model.parameters()),\
+                'local_1': optimizer(nodes[i].model_g.parameters()),\
                     'all': optimizer(list(nodes[i].model.parameters())+list(nodes[i].model_g.parameters()))})
     
     del train_splited, test_splited
@@ -49,23 +49,29 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
     # initialize clustering and distribute
     server.weighted_clustering(nodes, list(range(num_nodes)), K)
-    for i in range(K):
-        server.aggregate(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
-        server.distribute(nodes, [j for j in list(range(num_nodes)) if nodes[j].label==i])
-        cluster_models[i].load_state_dict(server.model.state_dict())
+    for j in range(K):
+        assign_ls = [i for i in list(range(num_nodes)) if nodes[i].label==j]
+        weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assign_ls]) for i in assign_ls]
+        model_k = server.aggregate([nodes[i].model for i in assign_ls], weight_ls)
+        server.distribute([nodes[i].model for i in assign_ls], model_k)
+        cluster_models[j].load_state_dict(model_k)
 
     # train!
     for i in range(global_rounds - warmup_rounds):
         print('-------------------Global round %d start-------------------' % (i))
-        # local update
-        # for j in range(num_nodes):
-        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['global'],\
-        #         model_opt = nodes[j].model_g, model_fix = cluster_models[[l for l in range(K) if j in assignment[l]][0]]))
-        #     nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local'], \
-        #         model_opt = nodes[j].model, model_fix = nodes[j].model_g))
-
+        # update model_g
         for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['all'], \
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
+                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
+
+        # aggregate and distribute model_g
+        weight_all = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
+        server.model.load_state_dict(server.aggregate([nodes[i].model_g for i in range(num_nodes)], weight_all))
+        server.distribute([nodes[i].model_g for i in range(num_nodes)])
+
+        # update model
+        for j in range(num_nodes):        
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_0'], \
                 model_opt = nodes[j].model, model_fix = nodes[j].model_g))
 
         # server clustering
@@ -74,17 +80,14 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         # server aggregation and distribution by cluster
         for j in range(K):
             assign_ls = [i for i in list(range(num_nodes)) if nodes[i].label==j]
-            weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assign_ls]) for i in assign_ls] 
-            server.distribute([nodes[i].model for i in assign_ls], server.aggregate([nodes[i].model for i in assign_ls], weight_ls))
-            cluster_models[j].load_state_dict(server.model.state_dict())
-        
-        # aggregate model_g
-        weight_all = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
-        server.model.load_state_dict(server.aggregate([nodes[i].model_1 for i in range(num_nodes)], weight_list))
+            weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assign_ls]) for i in assign_ls]
+            model_k = server.aggregate([nodes[i].model for i in assign_ls], weight_ls)
+            server.distribute([nodes[i].model for i in assign_ls], model_k)
+            cluster_models[j].load_state_dict(model_k)
         
         # test accuracy
         for j in range(num_nodes):
-            nodes[j].local_test()
+             nodes[j].local_test(model_res = nodes[j].model_g)
         server.acc(nodes, weight_list)
     
     # log

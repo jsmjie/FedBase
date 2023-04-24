@@ -275,7 +275,6 @@ class node():
                     outputs = model_res(inputs) + self.model(inputs)
                 else:
                     outputs = self.model(inputs) 
-                outputs = self.model(inputs)
                 # print(outputs.data.dtype)
                 _, predicted = torch.max(outputs.data, 1)
                 predict_ts = torch.cat([predict_ts, predicted], 0)
