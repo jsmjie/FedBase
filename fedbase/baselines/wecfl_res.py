@@ -56,6 +56,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.distribute([nodes[i].model for i in assign_ls], model_k)
         cluster_models[j].load_state_dict(model_k)
 
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
     # train!
     for i in range(global_rounds - warmup_rounds):
         print('-------------------Global round %d start-------------------' % (i))

@@ -47,11 +47,11 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # train!
     # b_list = []
     # uu_list = []
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
 
         # local update
-        weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
         server.model.load_state_dict(server.aggregate([nodes[i].model for i in range(num_nodes)], weight_list))
         for j in range(num_nodes):
             if i == 0:

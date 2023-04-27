@@ -47,6 +47,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     # train!
     b_list = []
     uu_list =[]
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
         # local update
