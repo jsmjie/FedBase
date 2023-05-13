@@ -39,7 +39,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     del train_splited, test_splited
 
     # initialize parameters to nodes
-    server.distribute(nodes, list(range(num_nodes)))
+    server.distribute([nodes[i].model for i in range(num_nodes)])
 
     # initialize K cluster model
     cluster_models = [model() for i in range(K)]
@@ -55,7 +55,8 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             if not reg:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
+                print(reg)
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate([nodes[i].model for i in range(num_nodes)], weight_list), lam= reg))
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K)
 
@@ -91,8 +92,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             nodes[j].local_test()
         server.acc(nodes, weight_list)
     
+    assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
     # log
     log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
 
-    return cluster_models
+    return cluster_models, assign
     

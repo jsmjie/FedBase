@@ -43,6 +43,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     cluster_models = [model() for i in range(K)]
 
     # train!
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
     for i in range(global_rounds):
         print('-------------------Global round %d start-------------------' % (i))
         # assign client to cluster
@@ -83,6 +84,5 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
 
     # log
     log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
-
 
     return cluster_models

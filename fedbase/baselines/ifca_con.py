@@ -91,6 +91,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.acc(nodes, weight_list)
 
     # log
-    log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg_lam) + add_(split_para), nodes, server)
+    log(os.path.basename(__file__)[:-3] + add_(K) + add_(base) + add_(tmp) + add_(mu) + add_(reg_lam) + add_(split_para), nodes, server)
 
     return cluster_models

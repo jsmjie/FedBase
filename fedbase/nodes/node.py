@@ -108,9 +108,9 @@ class node():
         outputs = self.model(inputs)
         # optim
         reg = 0
-        for p,q in zip(self.model.parameters(), reg_model.parameters()):
-            # reg += torch.square(LA.vector_norm((p-q),2))
-            reg += torch.square(torch.norm((p-q),2))
+        for key in self.model.state_dict().keys():
+            reg += torch.square(torch.norm((self.model.state_dict()[key]-reg_model[key]),2))
+        reg.to(self.device)
         self.loss = self.objective(outputs, labels) + lam*reg/2
         # print(self.objective(outputs, labels))
         self.loss.backward()
@@ -272,6 +272,7 @@ class node():
                 labels = torch.flatten(labels)
                 labels = labels.to(self.device, dtype = torch.long)
                 if model_res:
+                    model_res.to(self.device)
                     outputs = model_res(inputs) + self.model(inputs)
                 else:
                     outputs = self.model(inputs) 
