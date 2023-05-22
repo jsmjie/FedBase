@@ -55,6 +55,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                 if nodes[i].local_train_loss(cluster_models[m])>=nodes[i].local_train_loss(cluster_models[k]):
                     m = k
             assignment[m].append(i)
+            nodes[i].label = m
             nodes[i].assign_model(cluster_models[m])
             nodes[i].assign_optim(optimizer(nodes[i].model.parameters()))
         # print(server.clustering)
@@ -82,7 +83,8 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             nodes[i].local_test()
         server.acc(nodes, weight_list)
 
+    assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
     # log
     log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
 
-    return cluster_models
+    return cluster_models, assign

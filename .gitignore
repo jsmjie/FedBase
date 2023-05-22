@@ -1,6 +1,9 @@
 command.txt
 .pypirc
 publish.sh
+result_analysis.py
+ablation.py
+visual.ipynb
 
 legacy/
 data/
