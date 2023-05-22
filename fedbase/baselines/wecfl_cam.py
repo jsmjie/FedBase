@@ -91,8 +91,9 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
              nodes[j].local_test(model_res = nodes[j].model_g)
         server.acc(nodes, weight_list)
     
+    assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
     # log
     log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
 
-    return cluster_models
+    return cluster_models, assign
     
