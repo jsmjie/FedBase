@@ -12,7 +12,8 @@ import sys
 import inspect
 from functools import partial
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, warmup_rounds, global_rounds, local_steps, \
+    reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'), finetune=False, finetune_steps = None):
     train_splited, test_splited, split_para = dataset_splited
     # warm up
     model_g = fedavg.run(dataset_splited, batch_size, num_nodes, model, objective, optimizer, warmup_rounds, local_steps, device, log_file = False)
@@ -55,7 +56,12 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_0'], \
                 model_opt = nodes[j].model, model_fix = nodes[j].model_g)) 
         
-        # clustering
+        # local update model_g for global model
+        for j in range(num_nodes):
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
+                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
+
+        # server clustering
         assignment = [[] for _ in range(K)]
         for i in range(num_nodes):
             m = 0
@@ -68,7 +74,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             assignment[m].append(i)
             nodes[i].label = m
 
-        # print(server.clustering)
         server.clustering['label'].append(assignment) 
         # print(assignment)
         print([len(assignment[i]) for i in range(len(assignment))]) 
@@ -80,11 +85,6 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
                     [nodes[i].data_size/sum([nodes[i].data_size for i in assignment[k]]) for i in assignment[k]])
                 server.distribute([nodes[i].model for i in assignment[k]], model_k)
                 cluster_models[k].load_state_dict(model_k)
-        
-        # local update model_g for global model
-        for j in range(num_nodes):
-            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
-                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
             
         # aggregate model_g
         server.model.load_state_dict(server.aggregate([nodes[i].model_g for i in range(num_nodes)], weight_list))
@@ -96,8 +96,26 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
              nodes[j].local_test(model_res = nodes[j].model_g)
         server.acc(nodes, weight_list)
 
-    assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
-    # log
-    log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
-
-    return cluster_models, assign
+    if not finetune:
+        assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
+        # log
+        log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
+        return cluster_models, assign
+    else:
+        if not finetune_steps:
+            finetune_steps = local_steps
+        # fine tune
+        # local update model for cluster model
+        for j in range(num_nodes):
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_0'], \
+                model_opt = nodes[j].model, model_fix = nodes[j].model_g)) 
+        
+        # local update model_g for global model
+        for j in range(num_nodes):
+            nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
+                model_opt = nodes[j].model_g, model_fix = nodes[j].model))
+            nodes[j].local_test()
+        server.acc(nodes, weight_list)
+        # log
+        log(os.path.basename(__file__)[:-3] + add_('finetune') + add_(K) + add_(reg) + add_(split_para), nodes, server)
+        return [nodes[i].model for i in range(num_nodes)]

@@ -14,7 +14,7 @@ import time
 import torchvision.models as models
 
 os.chdir(os.path.dirname(os.path.abspath(__file__))) # set the current path as the working directory
-global_rounds = 1
+global_rounds = 3
 num_nodes = 200
 local_steps = 10
 batch_size = 32
@@ -77,14 +77,14 @@ if __name__ == '__main__':
     # ditto.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10, 0.95)
     # fedprox.run(data_process('fashion_mnist').split_dataset_groupwise(10,6,'class',20,5,'class'), batch_size, num_nodes, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 1)
     # fedprox_ensemble.run(data_process('fashion_mnist').split_dataset_groupwise(10,6,'class',20,5,'class'), 16,10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, 1, 3)
-    # fedavg.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10)
+    # fedavg.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16, 10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 3, 10,finetune=True)
     # fedavg_ensemble.run(data_process('fashion_mnist').split_dataset_groupwise(5,6,'class',10,5,'class'), 16,10, CNNFashion_Mnist,  nn.CrossEntropyLoss, optimizer, 2, 10, 3)
-    ifca.run(data_process('cifar10').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
+    # ifca.run(data_process('cifar10').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # wecfl.run(data_process('medmnist_tissuemnist').split_dataset_groupwise(10,0.1,'dirichlet',20,10,'dirichlet'), batch_size, 10, num_nodes, CNNTissue, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
-    # wecfl.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg=0)
+    fesem.run(data_process('cifar10').split_dataset_groupwise(10, 0.1, 'dirichlet', 20, 10, 'dirichlet'), batch_size, 10, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, reg_lam=0.001, finetune=True)
     # wecfl.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
     # cfl_res.run(data_process('cifar10').split_dataset_groupwise(5, 3, 'class', 40, 2, 'class'), batch_size, 5, num_nodes, CNNCifar, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps)
-    # ifca_res.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, 2, global_rounds, local_steps)
+    # fesem_cam.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, 2, global_rounds, local_steps, finetune =True, reg_lam=0.01)
     # wecfl_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =1, base = 'parameter', reg_lam = 0.01)
     # fesem_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =1, base = 'representation', reg_lam = 0.01)
     # wecfl_con.run(data_process('fashion_mnist').split_dataset(200, 2, 'class'), batch_size, 5, num_nodes, CNNFashion_Mnist, nn.CrossEntropyLoss, optimizer, global_rounds, local_steps, warmup_rounds = 1, tmp = 0.1, mu =10, base = 'parameter', reg_lam = 0.01)

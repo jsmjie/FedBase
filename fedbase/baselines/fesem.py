@@ -11,7 +11,8 @@ import sys
 import inspect
 from functools import partial
 
-def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, reg = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, global_rounds, local_steps, \
+    reg_lam = None, device = torch.device('cuda' if torch.cuda.is_available() else 'cpu'), finetune=False, finetune_steps = None):
     # dt = data_process(dataset)
     # train_splited, test_splited = dt.split_dataset(num_nodes, split['split_para'], split['split_method'])
     train_splited, test_splited, split_para = dataset_splited
@@ -37,20 +38,21 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     del train_splited, test_splited
 
     # initialize parameters to nodes
-    server.distribute(nodes, list(range(num_nodes)))
+    server.distribute([nodes[i].model for i in range(num_nodes)])
+    weight_list = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
 
     # initialize K cluster model
     cluster_models = [model() for i in range(K)]
-
+    
     # train!
-    for i in range(global_rounds):
-        print('-------------------Global round %d start-------------------' % (i))
+    for t in range(global_rounds):
+        print('-------------------Global round %d start-------------------' % (t))
         # local update
         for j in range(num_nodes):
-            if not reg:
+            if not reg_lam or t == 0:
                 nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
             else:
-                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = server.aggregate(nodes, list(range(num_nodes))), lam= reg))
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = cluster_models[nodes[j].label], reg_lam= reg_lam))
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K, weight_type= 'equal')
 
@@ -67,8 +69,22 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             nodes[j].local_test()
         server.acc(nodes, weight_list)
     
-    assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
-    # log
-    log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg) + add_(split_para), nodes, server)
-
-    return cluster_models, assign
+    if not finetune:
+        assign = [[i for i in range(num_nodes) if nodes[i].label == k] for k in range(K)]
+        # log
+        log(os.path.basename(__file__)[:-3] + add_(K) + add_(reg_lam) + add_(split_para), nodes, server)
+        return cluster_models, assign
+    else:
+        if not finetune_steps:
+            finetune_steps = local_steps
+        # fine tune
+        for j in range(num_nodes):
+            if not reg_lam:
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step))
+            else:
+                nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_fedprox, reg_model = cluster_models[nodes[j].label], reg_lam= reg_lam))
+            nodes[j].local_test()
+        server.acc(nodes, weight_list)
+        # log
+        log(os.path.basename(__file__)[:-3] + add_('finetune') + add_(K) + add_(reg_lam) + add_(split_para), nodes, server)
+        return [nodes[i].model for i in range(num_nodes)]

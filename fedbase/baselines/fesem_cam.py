@@ -49,7 +49,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
     cluster_models = [model() for i in range(K)]
 
     # initialize clustering and distribute
-    server.weighted_clustering(nodes, list(range(num_nodes)), K)
+    server.weighted_clustering(nodes, list(range(num_nodes)), K, weight_type= 'equal')
     for j in range(K):
         assign_ls = [i for i in list(range(num_nodes)) if nodes[i].label==j]
         weight_ls = [nodes[i].data_size/sum([nodes[i].data_size for i in assign_ls]) for i in assign_ls]
@@ -77,7 +77,7 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
         server.distribute([nodes[i].model_g for i in range(num_nodes)])
 
         # server clustering
-        server.weighted_clustering(nodes, list(range(num_nodes)), K)
+        server.weighted_clustering(nodes, list(range(num_nodes)), K, weight_type= 'equal')
 
         # server aggregation and distribution by cluster
         for j in range(K):

@@ -97,7 +97,7 @@ class node():
         # self.train_steps+=1
 
     # for fedprox and ditto
-    def train_single_step_fedprox(self, inputs, labels, reg_model, lam):
+    def train_single_step_fedprox(self, inputs, labels, reg_lam = None, reg_model = None):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
@@ -107,17 +107,19 @@ class node():
         # forward + backward + optimize
         outputs = self.model(inputs)
         # optim
-        reg = 0
-        for key in self.model.state_dict().keys():
-            reg += torch.square(torch.norm((self.model.state_dict()[key]-reg_model[key]),2))
-        reg.to(self.device)
-        self.loss = self.objective(outputs, labels) + lam*reg/2
+        if reg_lam:
+            reg_model.to(self.device)
+            reg = torch.square(torch.norm(torch.cat(tuple([torch.flatten(self.model.state_dict()[k] - reg_model.state_dict()[k])\
+                    for k in self.model.state_dict().keys()]),0),2))
+        else:
+            reg, reg_lam = 0, 0
+        self.loss = self.objective(outputs, labels) + reg_lam*reg/2
         # print(self.objective(outputs, labels))
         self.loss.backward()
         self.optim.step()
         # print('after', self.objective(self.model(inputs), labels))
     
-    def train_single_step_res(self, inputs, labels, optimizer, model_opt, model_fix):
+    def train_single_step_res(self, inputs, labels, optimizer, model_opt, model_fix, reg_lam = None, reg_model = None):
         inputs = inputs.to(self.device)
         labels = torch.flatten(labels)
         labels = labels.to(self.device, dtype = torch.long)
@@ -138,9 +140,16 @@ class node():
         # for p,q in zip(model_opt.parameters(), model_fix.parameters()):
         #     reg += torch.norm((p-q),2)
 
-        outputs = model_opt(inputs) + model_fix(inputs) 
-        loss = self.objective(outputs, labels)
+        outputs = model_opt(inputs) + model_fix(inputs)
+        
+        if reg_lam:
+            reg_model.to(self.device)
+            reg = torch.square(torch.norm(torch.cat(tuple([torch.flatten(model_opt.state_dict()[k] - reg_model.state_dict()[k])\
+                 for k in model_opt.state_dict().keys()]),0),2))
+        else:
+            reg, reg_lam = 0, 0
 
+        loss = self.objective(outputs, labels) + reg_lam/2 * reg
         # loss 3
         # reg = 0
         # for p,q in zip(model_opt.parameters(), model_fix.parameters()):
