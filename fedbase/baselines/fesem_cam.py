@@ -66,15 +66,15 @@ def run(dataset_splited, batch_size, K, num_nodes, model, objective, optimizer, 
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_1'],\
                 model_opt = nodes[j].model_g, model_fix = nodes[j].model))
 
-        # aggregate and distribute model_g
-        weight_all = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
-        server.model.load_state_dict(server.aggregate([nodes[i].model_g for i in range(num_nodes)], weight_all))
-        server.distribute([nodes[i].model_g for i in range(num_nodes)])
-
         # update local model
         for j in range(num_nodes):        
             nodes[j].local_update_steps(local_steps, partial(nodes[j].train_single_step_res, optimizer = nodes[j].optim['local_0'], \
                 model_opt = nodes[j].model, model_fix = nodes[j].model_g, reg_lam = reg_lam, reg_model = cluster_models[nodes[j].label]))
+
+        # aggregate and distribute model_g
+        weight_all = [nodes[i].data_size/sum([nodes[i].data_size for i in range(num_nodes)]) for i in range(num_nodes)]
+        server.model.load_state_dict(server.aggregate([nodes[i].model_g for i in range(num_nodes)], weight_all))
+        server.distribute([nodes[i].model_g for i in range(num_nodes)])
 
         # server clustering
         server.weighted_clustering(nodes, list(range(num_nodes)), K, weight_type= 'equal')
